@@ -1158,9 +1158,9 @@ function generarEtiqueta() {
 
     <!-- CÓDIGO DE BARRAS -->
     <div style="padding:8px 14px 10px;text-align:center;border-top:1px solid #e2e8f0">
-      <svg id="barcode-svg"></svg>
+      <canvas id="barcode-canvas" style="max-width:100%"></canvas>
       <div style="font-size:9px;color:#64748b;margin-top:2px">
-        Escanear para despacho · ${datos.barras||''}
+        ${datos.barras||''}
       </div>
     </div>
 
@@ -1171,32 +1171,34 @@ function generarEtiqueta() {
     </div>
   </div>`;
 
-  // Generar código de barras Code128
   // Asegurar que siempre haya un código
   if (!datos.barras) {
     datos.barras = generarCodigoBarras({ id: datos.id || datos.sku || Date.now().toString() });
   }
-  try {
-    if (typeof JsBarcode !== 'undefined' && datos.barras) {
-      JsBarcode('#barcode-svg', datos.barras, {
-        format: 'CODE128',
-        width: 2,
-        height: 50,
-        displayValue: true,
-        fontSize: 11,
-        margin: 4,
-        lineColor: '#1a3a2a',
-        background: '#ffffff'
-      });
-    } else {
-      document.getElementById('barcode-svg').outerHTML = 
-        '<div style="padding:8px;font-size:11px;color:#1a3a2a;font-weight:700;font-family:monospace">' + datos.barras + '</div>';
+
+  // Generar código de barras en canvas DESPUÉS de que el DOM se actualice
+  setTimeout(() => {
+    const canvas = document.getElementById('barcode-canvas');
+    if (!canvas) return;
+    try {
+      if (typeof JsBarcode !== 'undefined' && datos.barras) {
+        JsBarcode(canvas, datos.barras, {
+          format: 'CODE128',
+          width: 2,
+          height: 55,
+          displayValue: false,
+          margin: 4,
+          lineColor: '#1a3a2a',
+          background: '#ffffff'
+        });
+      } else {
+        canvas.style.display = 'none';
+      }
+    } catch(e) {
+      console.warn('Barcode error:', e);
+      canvas.style.display = 'none';
     }
-  } catch(e) {
-    console.warn('Barcode error:', e);
-    document.getElementById('barcode-svg').outerHTML = 
-      '<div style="padding:8px;font-size:11px;color:#1a3a2a;font-weight:700;font-family:monospace">' + datos.barras + '</div>';
-  }
+  }, 100);
 
   document.getElementById('etiqueta-preview').style.display = 'block';
   window._datosEtiquetaActual = datos;
