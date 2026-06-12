@@ -60,7 +60,7 @@ function switchTabDespacho(tab) {
     tabNuevo.style.borderBottomColor = 'var(--primary)';
     tabActivos.style.color     = '#64748b';
     tabActivos.style.borderBottomColor = 'transparent';
-    renderSelectorCajas();
+    setTimeout(renderSelectorCajas, 50); // Mostrar stock inmediatamente
   } else {
     panelNuevo.style.display   = 'none';
     panelActivos.style.display = 'block';

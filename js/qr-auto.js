@@ -34,8 +34,9 @@ function generarQRAuto() {
   // Limpiar QR anterior
   canvas.innerHTML = '';
 
-  // Generar código de barras en vez de QR
-  const codigoBarras = datos.barras || (typeof generarCodigoBarras === 'function' ? generarCodigoBarras({id: datos.id||''}) : datos.l||datos.s||'FRIGOCARNES');
+  // Usar código guardado en la caja, o generar uno si no tiene
+  const codigoBarras = datos.barras || datos.id || 
+    (typeof generarCodigoBarras === 'function' ? generarCodigoBarras({id: datos.id||''}) : 'FRIGOCARNES');
   canvas.innerHTML = '<svg id="qr-auto-barcode-svg" style="max-width:100%"></svg>';
   try {
     JsBarcode('#qr-auto-barcode-svg', codigoBarras, {

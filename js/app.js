@@ -707,7 +707,15 @@ function despacharUna(id){
 function eliminarCaja(id){DB.deleteCaja(id);document.getElementById('detalleOverlay').style.display='none';App.showToast('Caja eliminada');filtrarCajas();renderDashboard();}
 function generarID(){document.getElementById('f-id').value=DB.getNextId();}
 function limpiarForm(){document.getElementById('cajaForm').reset();document.querySelectorAll('.autofilled').forEach(e=>e.classList.remove('autofilled'));document.getElementById('panelAnalisis').style.display='none';const s=DB.getSession();if(s)document.getElementById('f-op').value=s.usuario;document.getElementById('f-piezas').value='1';}
-function guardarCaja(e){e.preventDefault();const hoy=new Date().toISOString().split('T')[0];const hora=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});const get=id=>document.getElementById(id)?.value||'';const caja={id:get('f-id')||DB.getNextId(),sku:get('f-sku'),nombre:get('f-nombre'),tipo:get('f-tipo'),categoria:get('f-cat')||'Sin clasificar',lote:get('f-lote'),fecProd:get('f-fprod'),fecEnv:get('f-fenv'),fecVcto:get('f-fvcto'),horaProd:get('f-hprod'),pesoNeto:parseFloat(get('f-peso-neto'))||0,pesoBruto:parseFloat(get('f-peso-bruto'))||0,piezas:parseInt(get('f-piezas'))||1,unidad:get('f-unidad'),pais:get('f-pais'),planta:get('f-planta'),proveedor:get('f-prov'),temp:get('f-temp'),estado:'Disponible',camara:get('f-camara'),rack:get('f-rack'),fila:get('f-fila'),nivel:get('f-nivel'),pallet:get('f-pallet'),cliente:get('f-cliente'),oc:get('f-oc'),fecIngreso:hoy,horaIngreso:hora,fecSalida:'',horaSalida:'',operarioIngreso:get('f-op'),operarioDespacho:'',codigoBarras:get('f-barras'),inspeccion:get('f-insp'),cert:get('f-cert'),obs:get('f-obs'),movimientos:[`${hoy} ${hora} — Ingreso por ${get('f-op')}`]};DB.addCaja(caja);enviarASheets({tipo:'ingreso',id_caja:caja.id,sku:caja.sku,producto:caja.nombre,tipo_carne:caja.tipo,lote:caja.lote,fecha_produccion:caja.fecProd,fecha_vencimiento:caja.fecVcto,peso_neto:caja.pesoNeto,peso_bruto:caja.pesoBruto,proveedor:caja.proveedor,camara_frio:caja.camara,ubicacion:caja.rack+'/'+caja.fila+'/'+caja.nivel,n_pallet:caja.pallet,estado:caja.estado,pais_origen:caja.pais,operario:caja.operarioIngreso,fecha_ingreso:caja.fecIngreso,hora:caja.horaIngreso,cliente_destino:caja.cliente,observaciones:caja.obs});App.showToast('✓ '+caja.id+' registrada — generando etiqueta...');
+function guardarCaja(e){e.preventDefault();const hoy=new Date().toISOString().split('T')[0];const hora=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});const get=id=>document.getElementById(id)?.value||'';const caja={id:get('f-id')||DB.getNextId(),sku:get('f-sku'),nombre:get('f-nombre'),tipo:get('f-tipo'),categoria:get('f-cat')||'Sin clasificar',lote:get('f-lote'),fecProd:get('f-fprod'),fecEnv:get('f-fenv'),fecVcto:get('f-fvcto'),horaProd:get('f-hprod'),pesoNeto:parseFloat(get('f-peso-neto'))||0,pesoBruto:parseFloat(get('f-peso-bruto'))||0,piezas:parseInt(get('f-piezas'))||1,unidad:get('f-unidad'),pais:get('f-pais'),planta:get('f-planta'),proveedor:get('f-prov'),temp:get('f-temp'),estado:'Disponible',camara:get('f-camara'),rack:get('f-rack'),fila:get('f-fila'),nivel:get('f-nivel'),pallet:get('f-pallet'),cliente:get('f-cliente'),oc:get('f-oc'),fecIngreso:hoy,horaIngreso:hora,fecSalida:'',horaSalida:'',operarioIngreso:get('f-op'),operarioDespacho:'',codigoBarras:get('f-barras')||'',inspeccion:get('f-insp'),cert:get('f-cert'),obs:get('f-obs'),movimientos:[`${hoy} ${hora} — Ingreso por ${get('f-op')}`]};
+// Generar código de barras automático si no tiene
+if (!caja.codigoBarras) {
+  caja.codigoBarras = generarCodigoBarras(caja);
+}
+// Guardar campo en formulario
+const barrasEl = document.getElementById('f-barras');
+if (barrasEl && !barrasEl.value) barrasEl.value = caja.codigoBarras;
+DB.addCaja(caja);enviarASheets({tipo:'ingreso',id_caja:caja.id,sku:caja.sku,producto:caja.nombre,tipo_carne:caja.tipo,lote:caja.lote,fecha_produccion:caja.fecProd,fecha_vencimiento:caja.fecVcto,peso_neto:caja.pesoNeto,peso_bruto:caja.pesoBruto,proveedor:caja.proveedor,camara_frio:caja.camara,ubicacion:caja.rack+'/'+caja.fila+'/'+caja.nivel,n_pallet:caja.pallet,estado:caja.estado,pais_origen:caja.pais,operario:caja.operarioIngreso,fecha_ingreso:caja.fecIngreso,hora:caja.horaIngreso,cliente_destino:caja.cliente,observaciones:caja.obs});App.showToast('✓ '+caja.id+' registrada — generando etiqueta...');
   // Pre-llenar etiquetas con los datos de la caja recién ingresada
   setTimeout(()=>{
     const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v;};
@@ -1001,11 +1009,29 @@ function renderHistorialDatos(contenedor, mesNom, anio, datos, esCierre) {
 // ============================================================
 
 function generarCodigoBarras(caja) {
-  // Formato: FC + año + número correlativo → ej: FC26000042
-  // Usando el ID de la caja como base
+  // Formato: FC + año(2) + número(8) → ej: FC2600000042
+  // Compatible con Code128 y pistolas lectoras
   const id = (caja.id || '').replace(/[^0-9]/g, '').slice(-8).padStart(8,'0');
   const anio = new Date().getFullYear().toString().slice(-2);
-  return 'FC' + anio + id;
+  const codigo = 'FC' + anio + id;
+  return codigo;
+}
+
+// Generar códigos para cajas existentes sin código de barras
+function generarCodigosExistentes() {
+  const stock = DB.getStock();
+  let actualizadas = 0;
+  stock.forEach(c => {
+    if (!c.codigoBarras) {
+      c.codigoBarras = generarCodigoBarras(c);
+      DB.updateCaja(c.id, { codigoBarras: c.codigoBarras });
+      actualizadas++;
+    }
+  });
+  if (actualizadas > 0) {
+    App.showToast('✓ Códigos generados para ' + actualizadas + ' cajas');
+  }
+  return actualizadas;
 }
 
 function generarEtiqueta() {
