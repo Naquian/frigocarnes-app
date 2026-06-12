@@ -1176,29 +1176,24 @@ function generarEtiqueta() {
     datos.barras = generarCodigoBarras({ id: datos.id || datos.sku || Date.now().toString() });
   }
 
-  // Generar código de barras en canvas DESPUÉS de que el DOM se actualice
+  // Generar código de barras con librería propia
   setTimeout(() => {
     const canvas = document.getElementById('barcode-canvas');
-    if (!canvas) return;
+    if (!canvas || !datos.barras) return;
     try {
-      if (typeof JsBarcode !== 'undefined' && datos.barras) {
-        JsBarcode(canvas, datos.barras, {
-          format: 'CODE128',
-          width: 2,
-          height: 55,
-          displayValue: false,
-          margin: 4,
-          lineColor: '#1a3a2a',
-          background: '#ffffff'
-        });
-      } else {
-        canvas.style.display = 'none';
-      }
+      Barcode.draw(canvas, datos.barras, {
+        width: 2,
+        height: 55,
+        displayValue: true,
+        fontSize: 11,
+        margin: 4,
+        lineColor: '#1a3a2a',
+        background: '#ffffff'
+      });
     } catch(e) {
       console.warn('Barcode error:', e);
-      canvas.style.display = 'none';
     }
-  }, 100);
+  }, 150);
 
   document.getElementById('etiqueta-preview').style.display = 'block';
   window._datosEtiquetaActual = datos;

@@ -37,21 +37,24 @@ function generarQRAuto() {
   // Usar código guardado en la caja, o generar uno si no tiene
   const codigoBarras = datos.barras || datos.id || 
     (typeof generarCodigoBarras === 'function' ? generarCodigoBarras({id: datos.id||''}) : 'FRIGOCARNES');
-  canvas.innerHTML = '<svg id="qr-auto-barcode-svg" style="max-width:100%"></svg>';
-  try {
-    JsBarcode('#qr-auto-barcode-svg', codigoBarras, {
-      format: 'CODE128',
-      width: 1.8,
-      height: 55,
-      displayValue: true,
-      fontSize: 10,
-      margin: 4,
-      lineColor: '#1a3a2a',
-      background: '#ffffff'
-    });
-  } catch(e) {
-    canvas.innerHTML = '<div style="font-size:10px;color:#999;padding:8px">Código: '+codigoBarras+'</div>';
-  }
+  canvas.innerHTML = '<canvas id="qr-auto-barcode-canvas"></canvas>';
+  setTimeout(() => {
+    const bc = document.getElementById('qr-auto-barcode-canvas');
+    if (!bc) return;
+    try {
+      Barcode.draw(bc, codigoBarras, {
+        width: 1.8,
+        height: 50,
+        displayValue: true,
+        fontSize: 10,
+        margin: 4,
+        lineColor: '#1a3a2a',
+        background: '#ffffff'
+      });
+    } catch(e) {
+      canvas.innerHTML = '<div style="font-size:10px;color:#999;padding:8px">'+codigoBarras+'</div>';
+    }
+  }, 150);
 
   const fmtDate = d => {
     if (!d) return '—';
