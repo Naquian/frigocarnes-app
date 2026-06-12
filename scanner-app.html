@@ -165,20 +165,7 @@
   .conn-ok  { background: rgba(74,124,89,0.2); color: #6BAF84; }
   .conn-err { background: rgba(139,26,42,0.2); color: #C4536A; }
 
-  /* USUARIO */
-  .user-section {
-    padding: 0 16px 16px;
-  }
-  .user-label { font-size: 12px; color: #8C8880; margin-bottom: 6px; }
-  .user-select {
-    width: 100%;
-    padding: 10px 14px;
-    background: #252522;
-    border: 1px solid #3A3A36;
-    border-radius: 10px;
-    color: #F5F0E8;
-    font-size: 14px;
-  }
+
 
   /* HISTORIAL */
   .historial {
@@ -220,16 +207,9 @@
 
 <div id="conn-badge" class="conn-badge conn-ok">● Conectado</div>
 
-<!-- Selector de usuario -->
-<div class="user-section">
-  <div class="user-label">Operario</div>
-  <select class="user-select" id="usuarioSelect">
-    <option value="Administrador">Administrador</option>
-    <option value="Juan Pérez">Juan Pérez</option>
-    <option value="María González">María González</option>
-    <option value="Carlos Rojas">Carlos Rojas</option>
-    <option value="Ana Silva">Ana Silva</option>
-  </select>
+<!-- Usuario detectado automáticamente -->
+<div style="padding:8px 16px 0;font-size:12px;color:#8C8880;text-align:center">
+  Sesión: <span id="usuarioLabel" style="color:#C4953A;font-weight:700">Cargando...</span>
 </div>
 
 <!-- Status -->
@@ -274,18 +254,17 @@
   let fotoBase64 = null;
   let enviando = false;
 
-  // Restaurar usuario guardado
-  const usuarioGuardado = localStorage.getItem('frigocarnes_scanner_usuario');
-  if (usuarioGuardado) {
-    document.getElementById('usuarioSelect').value = usuarioGuardado;
-  }
-  document.getElementById('usuarioSelect').addEventListener('change', e => {
-    localStorage.setItem('frigocarnes_scanner_usuario', e.target.value);
-  });
-
+  // Leer usuario desde URL (?usuario=Administrador)
   function getUsuario() {
-    return document.getElementById('usuarioSelect').value || 'default';
+    const params = new URLSearchParams(window.location.search);
+    const u = params.get('usuario') || localStorage.getItem('frigocarnes_scanner_usuario') || 'Administrador';
+    return u;
   }
+  
+  // Mostrar usuario detectado
+  const usuarioActual = getUsuario();
+  const labelEl = document.getElementById('usuarioLabel');
+  if (labelEl) labelEl.textContent = usuarioActual;
 
   function setStatus(tipo, texto) {
     const el = document.getElementById('statusBar');

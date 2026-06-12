@@ -121,81 +121,14 @@
 
     <!-- INGRESAR -->
     <div class="view" id="view-ingresar">
+      <!-- Scanner oculto (mantener para compatibilidad) -->
+      <canvas id="camCanvas" style="display:none"></canvas>
+      <video id="camVideo" style="display:none" autoplay playsinline muted></video>
 
-      <!-- ESCÁNER REMOTO DESDE CELULAR -->
-      <div style="background:#252522;border-radius:12px;padding:14px 16px;margin-bottom:14px;border:1px solid #3A3A36">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div>
-            <div style="font-weight:700;font-size:14px;color:#C4953A">📱 Escáner desde celular</div>
-            <div style="font-size:11px;color:#8C8880;margin-top:2px">Toma la foto en el celular y se llena solo aquí</div>
-          </div>
-          <button id="btn-scanner-remoto"
-            onclick="toggleScannerRemoto()"
-            style="background:#C4953A;color:#1C1C1A;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">
-            ▷ Activar
-          </button>
-        </div>
-        <div id="sr-estado"
-          style="padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;background:rgba(196,149,58,0.1);color:#8C8880;border:1px solid #3A3A36">
-          Activa el escáner para recibir fotos del celular
-        </div>
-        <div style="margin-top:10px;font-size:11px;color:#8C8880;text-align:center">
-          Abre <strong style="color:#C4953A">scanner-app.html</strong> en tu celular
-          · <a href="scanner-app.html" target="_blank" style="color:#C4953A;text-decoration:none">Abrir ahora →</a>
-        </div>
-      </div>
 
-      <!-- Scanner -->
-      <div class="scanner-box" id="scannerBox">
-        <div class="cam-area" id="camArea">
-          <video id="camVideo" autoplay playsinline muted></video>
-          <canvas id="camCanvas" style="display:none"></canvas>
-          <div class="cam-overlay" id="camOverlay" style="display:none">
-            <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
-            <div class="cam-corner bl"></div><div class="cam-corner br"></div>
-            <div class="scan-line"></div>
-          </div>
-          <div class="cam-idle" id="camIdle">
-            <div class="cam-icon">&#128247;</div>
-            <p>Toca para abrir la cámara</p>
-            <span>Apunta a la etiqueta de la caja</span>
-          </div>
-        </div>
-      </div>
-      <div class="estado-bar estado-idle" id="estadoBar">
-        <span id="estadoMsg">Abre la cámara o ingresa los datos manualmente</span>
-      </div>
-
-      <!-- QR auto-generado tras escaneo -->
-      <div id="qr-auto-panel" style="display:none;background:var(--bg2);border-radius:12px;padding:12px 14px;margin:10px 0;border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-weight:700;font-size:13px;color:var(--primary)">🏷 Etiqueta QR generada</div>
-          <button onclick="imprimirQRAuto()" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">🖨 Imprimir</button>
-        </div>
-        <div id="qr-auto-contenido" style="display:flex;flex-direction:column;gap:6px">
-          <div id="qr-auto-datos" style="font-size:11px;color:#64748b;line-height:1.6"></div>
-          <div id="qr-auto-canvas" style="border:1px solid var(--border);border-radius:6px;padding:6px;background:#fff;text-align:center"></div>
-        </div>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-scan" id="btnCam" onclick="toggleCam()">&#128247; Abrir cámara</button>
-        <label class="btn btn-secondary" for="fileInput" style="cursor:pointer">&#8593; Subir foto</label>
-        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(event)">
-      </div>
-      <button class="btn btn-capture" id="btnCapture" onclick="capturar()" style="display:none;margin-top:8px">
-        &#128247; Capturar etiqueta
-      </button>
-      <button class="btn btn-ghost" onclick="usarDemo()" style="margin-top:8px;font-size:12px">
-        &#9881; Probar con etiqueta de ejemplo
-      </button>
-
-      <!-- Preview análisis -->
-      <div id="panelAnalisis" style="display:none;margin-top:12px">
-        <img id="previewImg" class="preview-img" src="" alt="Etiqueta capturada">
-        <div class="estado-bar estado-scanning" id="estadoBar2">
-          <span class="spin-icon">&#9696;</span>
-          <span id="estadoMsg2">IA leyendo etiqueta...</span>
-        </div>
+      <!-- Preview análisis (oculto, mantener para compatibilidad) -->
+      <div id="panelAnalisis" style="display:none">
+        <img id="previewImg" style="display:none" src="" alt="">
       </div>
 
       <!-- Formulario -->
@@ -490,7 +423,7 @@
         <!-- Botón crear pedido -->
         <div style="position:sticky;bottom:60px;padding:10px 0">
           <button onclick="crearPedido()" id="btn-crear-pedido"
-            style="width:100%;background:#1C1C1A;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;opacity:0.4">
+            style="width:100%;background:#1a3a2a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;opacity:0.4">
             🚚 Crear Pedido
           </button>
         </div>
@@ -507,7 +440,7 @@
         <div style="background:#fff;border-radius:16px;max-width:500px;margin:0 auto">
           <div id="remito-contenido"></div>
           <div style="display:flex;gap:8px;padding:16px">
-            <button onclick="imprimirRemito()" style="flex:1;background:#1C1C1A;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🖨 Imprimir</button>
+            <button onclick="imprimirRemito()" style="flex:1;background:#1a3a2a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">🖨 Imprimir</button>
             <button onclick="document.getElementById('modal-remito').style.display='none'" style="flex:1;background:#f1f3f4;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer">✕ Cerrar</button>
           </div>
         </div>
