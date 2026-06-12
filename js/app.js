@@ -1061,10 +1061,9 @@ function generarEtiqueta() {
     App.showToast('⚠ Completa al menos SKU, producto y lote'); return;
   }
 
-  // Generar código de barras automático si no hay uno
-  if (!datos.barras && datos.id) {
-    datos.barras = generarCodigoBarras({id: datos.id});
-    // Guardarlo en el campo y en la caja
+  // Generar código de barras si no hay uno (siempre antes del template)
+  if (!datos.barras) {
+    datos.barras = generarCodigoBarras({ id: datos.id || datos.sku || Date.now().toString() });
     const barrasEl = document.getElementById('eq-barras');
     if (barrasEl) barrasEl.value = datos.barras;
     if (caja.id) DB.updateCaja(caja.id, { codigoBarras: datos.barras });
@@ -1170,11 +1169,6 @@ function generarEtiqueta() {
       <span style="opacity:0.8">${datos.pais||'Chile'} · Trazabilidad certificada</span>
     </div>
   </div>`;
-
-  // Asegurar código ANTES de insertar el HTML
-  if (!datos.barras) {
-    datos.barras = generarCodigoBarras({ id: datos.id || datos.sku || Date.now().toString() });
-  }
 
   document.getElementById('etiqueta-preview').style.display = 'block';
   window._datosEtiquetaActual = datos;
@@ -1336,64 +1330,6 @@ function renderHistorialDatos(contenedor,mesNom,anio,datos,esCierre) {
   if(datos.ingresos.length>0){html+='<div style="font-weight:700;font-size:13px;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px">📦 Ingresos del mes <span style="background:var(--primary);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px">'+datos.ingresos.length+'</span></div>';datos.ingresos.forEach(c=>{html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg2);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--primary)"><div><div style="font-weight:600;font-size:13px">'+(c.nombre||c.producto||'—')+'</div><div style="font-size:11px;color:#64748b">'+(c.id||c.id_caja)+' · '+c.lote+'</div></div><div style="text-align:right"><div style="font-weight:700;font-size:13px">'+(c.pesoNeto||c.peso_neto)+' kg</div><div style="font-size:11px;color:#64748b">'+fmtDate(c.fecIngreso||c.fecha_ingreso)+'</div></div></div>';});}
   if(datos.despachos.length>0){html+='<div style="font-weight:700;font-size:13px;color:#0a4a7a;margin-bottom:8px;margin-top:12px;display:flex;align-items:center;gap:6px">🚚 Despachos del mes <span style="background:#0a4a7a;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px">'+datos.despachos.length+'</span></div>';datos.despachos.forEach(c=>{html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg2);border-radius:8px;margin-bottom:6px;border-left:3px solid #0a4a7a"><div><div style="font-weight:600;font-size:13px">'+(c.nombre||c.producto||'—')+'</div><div style="font-size:11px;color:#64748b">'+(c.id||c.id_caja)+' · '+(c.cliente||c.cliente_destino||'—')+'</div></div><div style="text-align:right"><div style="font-weight:700;font-size:13px">'+(c.pesoNeto||c.peso_neto)+' kg</div><div style="font-size:11px;color:#64748b">'+fmtDate(c.fecSalida||c.fecha_despacho)+'</div></div></div>';});}
   contenedor.innerHTML=html;
-}
-
-// ============================================================
-//  ETIQUETAS QR — Generador manual
-// ============================================================
-function generarEtiqueta() {
-  const get=id=>document.getElementById(id)?.value||'';
-  const datos={sku:get('eq-sku'),nombre:get('eq-nombre'),tipo:get('eq-tipo'),lote:get('eq-lote'),peso:get('eq-peso'),fprod:get('eq-fprod'),fvcto:get('eq-fvcto'),prov:get('eq-prov'),pais:get('eq-pais'),temp:get('eq-temp')};
-  if(!datos.sku||!datos.nombre||!datos.lote){App.showToast('⚠ Completa SKU, producto y lote');return;}
-  const qrData=JSON.stringify({s:datos.sku,n:datos.nombre,t:datos.tipo,l:datos.lote,p:datos.peso,fp:datos.fprod,fv:datos.fvcto,pr:datos.prov,pa:datos.pais,tm:datos.temp,src:'FRIGOCARNES'});
-  const fmtDate=d=>{if(!d)return'—';try{const[y,m,day]=d.split('-');return day+'/'+m+'/'+y;}catch{return d;}};
-  const contenedor=document.getElementById('etiqueta-contenido');
-  contenedor.innerHTML=`<div id="etiqueta-print" style="font-family:Arial,sans-serif;max-width:420px;margin:0 auto"><div style="background:#1a3a2a;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:16px;font-weight:800">❄ FRIGOCARNES</div><div style="font-size:10px;opacity:0.8">Etiqueta de Trazabilidad</div></div><div style="font-size:10px;opacity:0.8">${new Date().toLocaleDateString('es-CL')}</div></div><div style="padding:12px 14px;background:#fff;display:flex;gap:12px"><div style="flex:1"><div style="font-size:17px;font-weight:800;color:#1a3a2a">${datos.nombre}</div><div style="font-size:12px;color:#2d6a4f;font-weight:700;margin-bottom:10px">${datos.tipo} · ${datos.pais}</div><table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="background:#f8fffe"><td style="padding:4px 6px;color:#64748b;width:45%">SKU</td><td style="padding:4px 6px;font-weight:700">${datos.sku}</td></tr><tr><td style="padding:4px 6px;color:#64748b">N° Lote</td><td style="padding:4px 6px;font-weight:700">${datos.lote}</td></tr><tr style="background:#f8fffe"><td style="padding:4px 6px;color:#64748b">Peso Neto</td><td style="padding:4px 6px;font-weight:700">${datos.peso?datos.peso+' kg':'—'}</td></tr><tr><td style="padding:4px 6px;color:#64748b">F. Producción</td><td style="padding:4px 6px">${fmtDate(datos.fprod)}</td></tr><tr style="background:#fff8e1"><td style="padding:4px 6px;color:#64748b;font-weight:700">F. Vencimiento</td><td style="padding:4px 6px;font-weight:800;color:#c17b00">${fmtDate(datos.fvcto)}</td></tr><tr style="background:#f8fffe"><td style="padding:4px 6px;color:#64748b">Proveedor</td><td style="padding:4px 6px">${datos.prov}</td></tr><tr><td style="padding:4px 6px;color:#64748b">Conservar a</td><td style="padding:4px 6px;color:#1e40af;font-weight:700">${datos.temp}</td></tr></table></div><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div id="qr-canvas-manual" style="border:2px solid #1a3a2a;border-radius:6px;padding:4px;background:#fff"></div><div style="font-size:9px;color:#64748b;text-align:center">Escanear<br>para registrar</div></div></div><div style="background:#d8f3dc;padding:6px 14px;display:flex;justify-content:space-between;font-size:10px;color:#1a3a2a"><span>🌡 ${datos.temp}</span><span>Trazabilidad certificada · FRIGOCARNES</span></div></div>`;
-  document.getElementById('qr-canvas-manual').innerHTML='';
-  try{new QRCode(document.getElementById('qr-canvas-manual'),{text:qrData,width:110,height:110,colorDark:'#1a3a2a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){}
-  document.getElementById('etiqueta-preview').style.display='block';
-  App.showToast('✓ Etiqueta generada');
-}
-
-function imprimirEtiqueta() {
-  const el=document.getElementById('etiqueta-print');
-  if(!el)return;
-  const win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiqueta Frigocarnes</title><style>*{margin:0;padding:0;box-sizing:border-box}body{display:flex;justify-content:center;padding:20px;background:#f0f0f0}@media print{body{background:#fff;padding:0}@page{size:A6 landscape;margin:5mm}}</style></head><body>'+el.outerHTML+'</body></html>');
-  win.document.close();
-  setTimeout(()=>win.print(),600);
-}
-
-function descargarEtiqueta(){App.showToast('💡 Usa "Imprimir" y guarda como PDF');}
-
-function cargarDesdeCaja(){
-  const modal=document.getElementById('modal-caja');
-  const lista=document.getElementById('modal-lista');
-  const cajas=DB.getStock().filter(c=>c.estado!=='Despachado');
-  lista.innerHTML=cajas.map(c=>'<div onclick="seleccionarCajaEtiqueta(\''+c.id+'\')" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:13px">'+c.nombre+'</div><div style="font-size:11px;color:#64748b">'+c.id+' · '+c.sku+' · '+c.lote+'</div></div>').join('')||'<div style="text-align:center;color:#94a3b8;padding:20px">Sin cajas</div>';
-  modal.style.display='block';
-}
-
-function filtrarModalCajas(){
-  const s=document.getElementById('modal-search').value.toLowerCase();
-  const cajas=DB.getStock().filter(c=>c.estado!=='Despachado'&&[c.id,c.sku,c.nombre,c.lote].join(' ').toLowerCase().includes(s));
-  document.getElementById('modal-lista').innerHTML=cajas.map(c=>'<div onclick="seleccionarCajaEtiqueta(\''+c.id+'\')" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:13px">'+c.nombre+'</div><div style="font-size:11px;color:#64748b">'+c.id+' · '+c.sku+'</div></div>').join('')||'<div style="text-align:center;color:#94a3b8;padding:20px">Sin resultados</div>';
-}
-
-function seleccionarCajaEtiqueta(id){
-  const c=DB.getStock().find(x=>x.id===id);if(!c)return;
-  document.getElementById('eq-sku').value=c.sku||'';
-  document.getElementById('eq-nombre').value=c.nombre||'';
-  document.getElementById('eq-tipo').value=c.tipo||'Vacuno';
-  document.getElementById('eq-lote').value=c.lote||'';
-  document.getElementById('eq-peso').value=c.pesoNeto||'';
-  document.getElementById('eq-fprod').value=c.fecProd||'';
-  document.getElementById('eq-fvcto').value=c.fecVcto||'';
-  document.getElementById('eq-prov').value=c.proveedor||'';
-  document.getElementById('eq-pais').value=c.pais||'Chile';
-  document.getElementById('eq-temp').value=c.temp||'-18°C a -20°C';
-  document.getElementById('modal-caja').style.display='none';
-  App.showToast('✓ Datos cargados de '+c.id);
 }
 
 // ============================================================
