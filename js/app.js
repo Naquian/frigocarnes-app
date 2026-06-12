@@ -1415,3 +1415,174 @@ function escanearYDescontarCodigo() {
 function handleBarcodeScan(e) {
   if (e.key === 'Enter') escanearYDescontarCodigo();
 }
+
+// ============================================================
+//  ESCÁNER REMOTO — Recibe fotos desde el celular
+// ============================================================
+
+const ScannerRemoto = (() => {
+  let pollingActivo = false;
+  let intervalId   = null;
+  const BACKEND    = 'https://frigocarnes-backend-production.up.railway.app';
+
+  function getUsuario() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('frigocarnes_session'));
+      return s?.usuario || 'Administrador';
+    } catch { return 'Administrador'; }
+  }
+
+  function actualizarEstadoPanel(estado, texto) {
+    const el = document.getElementById('sr-estado');
+    if (!el) return;
+    const colores = {
+      esperando: { bg: 'rgba(196,149,58,0.1)',  color: '#C4953A', border: 'rgba(196,149,58,0.3)' },
+      recibiendo:{ bg: 'rgba(255,255,255,0.05)', color: '#8C8880', border: '#3A3A36' },
+      procesando:{ bg: 'rgba(255,255,255,0.05)', color: '#C4953A', border: '#3A3A36' },
+      listo:     { bg: 'rgba(74,124,89,0.15)',   color: '#6BAF84', border: 'rgba(74,124,89,0.3)' },
+      error:     { bg: 'rgba(139,26,42,0.15)',   color: '#C4536A', border: 'rgba(139,26,42,0.3)' }
+    };
+    const c = colores[estado] || colores.esperando;
+    el.style.background = c.bg;
+    el.style.color = c.color;
+    el.style.border = '1px solid ' + c.border;
+    el.textContent = texto;
+  }
+
+  async function procesarFoto(imagenBase64, mediaType) {
+    actualizarEstadoPanel('procesando', '⟳ IA leyendo la etiqueta...');
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imagenBase64 } },
+              { type: 'text', text: Scanner.PROMPT_OCR || 'Lee esta etiqueta de carne y extrae los datos en JSON.' }
+            ]
+          }]
+        })
+      });
+
+      if (!res.ok) throw new Error('Error API ' + res.status);
+      const data = await res.json();
+      const txt  = (data.content || []).map(b => b.text || '').join('').trim();
+
+      let parsed;
+      try { parsed = JSON.parse(txt.replace(/```json|```/g, '').trim()); }
+      catch { parsed = {}; }
+
+      // Ir a ingresar y llenar formulario
+      irA('ingresar');
+      setTimeout(() => {
+        if (typeof Scanner !== 'undefined') {
+          Scanner._poblarFormularioPublic ? Scanner._poblarFormularioPublic(parsed) : null;
+        }
+        // Llamar poblarFormulario directamente
+        const set = (id, val) => {
+          if (!val) return;
+          const el = document.getElementById(id);
+          if (el) { el.value = val; el.classList.add('autofilled'); }
+        };
+        set('f-sku',       parsed.sku);
+        set('f-nombre',    parsed.nombre);
+        set('f-lote',      parsed.lote);
+        set('f-barras',    parsed.codigoBarras);
+        set('f-peso-neto', parsed.pesoNeto);
+        set('f-peso-bruto',parsed.pesoBruto);
+        set('f-piezas',    parsed.piezas || 1);
+        set('f-fprod',     parsed.fechaProduccion);
+        set('f-fenv',      parsed.fechaEnvasado);
+        set('f-fvcto',     parsed.fechaVencimiento);
+        set('f-prov',      parsed.proveedor);
+        set('f-planta',    parsed.planta);
+        set('f-cert',      parsed.certificaciones);
+        set('f-obs',       parsed.observaciones);
+
+        const matchSel = (id, val) => {
+          if (!val) return;
+          const sel = document.getElementById(id);
+          if (!sel) return;
+          const match = [...sel.options].find(o =>
+            o.value.toLowerCase().includes(val.toLowerCase()) ||
+            val.toLowerCase().includes(o.value.toLowerCase())
+          );
+          if (match) sel.value = match.value;
+        };
+        matchSel('f-tipo', parsed.tipo);
+        matchSel('f-pais', parsed.pais);
+        matchSel('f-temp', parsed.temperatura);
+
+        if (!document.getElementById('f-id').value) {
+          document.getElementById('f-id').value = DB.getNextId();
+        }
+        const s = DB.getSession();
+        if (s) { const op = document.getElementById('f-op'); if(op) op.value = s.usuario; }
+
+        actualizarEstadoPanel('listo', '✅ Formulario llenado automáticamente');
+        App.showToast('✓ Etiqueta leída desde el celular');
+
+        const campos = Object.values(parsed).filter(v => v !== null).length;
+        setTimeout(() => actualizarEstadoPanel('esperando', '📷 Esperando nueva foto del celular...'), 5000);
+      }, 300);
+
+      // Marcar foto como procesada
+      await fetch(BACKEND + '/api/scanner/pendiente/' + encodeURIComponent(getUsuario()), {
+        method: 'DELETE'
+      });
+
+    } catch(err) {
+      console.error('[ScannerRemoto] Error IA:', err);
+      actualizarEstadoPanel('error', '❌ Error procesando: ' + err.message);
+      setTimeout(() => actualizarEstadoPanel('esperando', '📷 Esperando nueva foto del celular...'), 4000);
+    }
+  }
+
+  async function poll() {
+    if (!pollingActivo) return;
+    try {
+      const res = await fetch(BACKEND + '/api/scanner/pendiente/' + encodeURIComponent(getUsuario()));
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.hay_foto) {
+        actualizarEstadoPanel('recibiendo', '📥 Foto recibida, procesando...');
+        await procesarFoto(data.imagenBase64, data.mediaType);
+      }
+    } catch(e) {
+      // Sin conexión, silencioso
+    }
+  }
+
+  function iniciar() {
+    if (pollingActivo) return;
+    pollingActivo = true;
+    intervalId    = setInterval(poll, 2500);
+    actualizarEstadoPanel('esperando', '📷 Esperando nueva foto del celular...');
+    console.log('[ScannerRemoto] Polling iniciado');
+  }
+
+  function detener() {
+    pollingActivo = false;
+    if (intervalId) { clearInterval(intervalId); intervalId = null; }
+    actualizarEstadoPanel('esperando', '⏸ Escáner remoto pausado');
+    console.log('[ScannerRemoto] Polling detenido');
+  }
+
+  return { iniciar, detener, activo: () => pollingActivo };
+})();
+
+function toggleScannerRemoto() {
+  const btn = document.getElementById('btn-scanner-remoto');
+  if (ScannerRemoto.activo()) {
+    ScannerRemoto.detener();
+    if (btn) { btn.textContent = '▷ Activar'; btn.style.background = '#C4953A'; }
+  } else {
+    ScannerRemoto.iniciar();
+    if (btn) { btn.textContent = '⏸ Pausar'; btn.style.background = '#3A3A36'; btn.style.color = '#F5F0E8'; }
+  }
+}

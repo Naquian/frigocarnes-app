@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1C1C1A">
+<title>Frigocarnes — Escáner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1C1C1A;
+    color: #F5F0E8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  .header {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #2E2E2A;
+  }
+  .header-icon { font-size: 28px; }
+  .header-title { font-size: 18px; font-weight: 800; color: #C4953A; }
+  .header-sub { font-size: 12px; color: #8C8880; margin-top: 1px; }
+
+  /* STATUS */
+  .status-bar {
+    margin: 16px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .status-waiting  { background: rgba(196,149,58,0.1);  color: #C4953A; border: 1px solid rgba(196,149,58,0.3); }
+  .status-sending  { background: rgba(255,255,255,0.05); color: #8C8880; border: 1px solid #3A3A36; }
+  .status-ok       { background: rgba(74,124,89,0.15);   color: #6BAF84; border: 1px solid rgba(74,124,89,0.3); }
+  .status-error    { background: rgba(139,26,42,0.15);   color: #C4536A; border: 1px solid rgba(139,26,42,0.3); }
+
+  /* CÁMARA */
+  .cam-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .preview-container {
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 4/3;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid #3A3A36;
+    background: #111;
+    position: relative;
+  }
+
+  #camPreview, #imgPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  #imgPreview { display: none; }
+
+  .cam-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #8C8880;
+  }
+  .cam-placeholder span { font-size: 48px; }
+  .cam-placeholder p { font-size: 14px; }
+
+  /* BOTONES */
+  .btn-capture {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid #C4953A;
+    background: #1C1C1A;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-capture:active { transform: scale(0.92); background: #2E2E2A; }
+  .btn-capture-inner {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #C4953A;
+    transition: background 0.15s;
+  }
+  .btn-capture:active .btn-capture-inner { background: #A67B2E; }
+
+  .btn-retomar {
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: 1px solid #3A3A36;
+    background: none;
+    color: #8C8880;
+    font-size: 14px;
+    cursor: pointer;
+    display: none;
+  }
+
+  .btn-enviar {
+    padding: 14px 40px;
+    border-radius: 12px;
+    border: none;
+    background: #C4953A;
+    color: #1C1C1A;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+    max-width: 300px;
+    display: none;
+    transition: background 0.15s;
+  }
+  .btn-enviar:active { background: #A67B2E; }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* INPUT FOTO (oculto) */
+  #fotoInput { display: none; }
+
+  /* CONEXIÓN */
+  .conn-badge {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .conn-ok  { background: rgba(74,124,89,0.2); color: #6BAF84; }
+  .conn-err { background: rgba(139,26,42,0.2); color: #C4536A; }
+
+  /* USUARIO */
+  .user-section {
+    padding: 0 16px 16px;
+  }
+  .user-label { font-size: 12px; color: #8C8880; margin-bottom: 6px; }
+  .user-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: #252522;
+    border: 1px solid #3A3A36;
+    border-radius: 10px;
+    color: #F5F0E8;
+    font-size: 14px;
+  }
+
+  /* HISTORIAL */
+  .historial {
+    padding: 0 16px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hist-item {
+    background: #252522;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #8C8880;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hist-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .hist-ok   { color: #6BAF84; }
+  .hist-time { font-size: 10px; margin-top: 2px; color: #8C8880; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">📷</div>
+  <div>
+    <div class="header-title">Frigocarnes Scanner</div>
+    <div class="header-sub">App compañera para toma de fotos</div>
+  </div>
+</div>
+
+<div id="conn-badge" class="conn-badge conn-ok">● Conectado</div>
+
+<!-- Selector de usuario -->
+<div class="user-section">
+  <div class="user-label">Operario</div>
+  <select class="user-select" id="usuarioSelect">
+    <option value="Administrador">Administrador</option>
+    <option value="Juan Pérez">Juan Pérez</option>
+    <option value="María González">María González</option>
+    <option value="Carlos Rojas">Carlos Rojas</option>
+    <option value="Ana Silva">Ana Silva</option>
+  </select>
+</div>
+
+<!-- Status -->
+<div class="status-bar status-waiting" id="statusBar">
+  📷 Listo para fotografiar etiqueta
+</div>
+
+<!-- Cámara / Preview -->
+<div class="cam-section">
+  <div class="preview-container">
+    <div class="cam-placeholder" id="camPlaceholder">
+      <span>🥩</span>
+      <p>Toca el botón para fotografiar</p>
+    </div>
+    <img id="imgPreview" src="" alt="Foto capturada">
+  </div>
+
+  <div class="controls">
+    <!-- Botón capturar (dispara input file con cámara) -->
+    <button class="btn-capture" id="btnCapture" onclick="abrirCamara()" title="Tomar foto">
+      <div class="btn-capture-inner"></div>
+    </button>
+
+    <!-- Botones post-captura -->
+    <button class="btn-enviar" id="btnEnviar" onclick="enviarFoto()">
+      📤 Enviar al notebook
+    </button>
+    <button class="btn-retomar" id="btnRetomar" onclick="retomar()">
+      Retomar foto
+    </button>
+  </div>
+</div>
+
+<!-- Historial envíos -->
+<div class="historial" id="historial"></div>
+
+<!-- Input de cámara oculto -->
+<input type="file" id="fotoInput" accept="image/*" capture="environment" onchange="fotoSeleccionada(event)">
+
+<script>
+  const BACKEND_URL = 'https://frigocarnes-backend-production.up.railway.app';
+  let fotoBase64 = null;
+  let enviando = false;
+
+  // Restaurar usuario guardado
+  const usuarioGuardado = localStorage.getItem('frigocarnes_scanner_usuario');
+  if (usuarioGuardado) {
+    document.getElementById('usuarioSelect').value = usuarioGuardado;
+  }
+  document.getElementById('usuarioSelect').addEventListener('change', e => {
+    localStorage.setItem('frigocarnes_scanner_usuario', e.target.value);
+  });
+
+  function getUsuario() {
+    return document.getElementById('usuarioSelect').value || 'default';
+  }
+
+  function setStatus(tipo, texto) {
+    const el = document.getElementById('statusBar');
+    el.className = 'status-bar status-' + tipo;
+    el.textContent = texto;
+  }
+
+  function abrirCamara() {
+    document.getElementById('fotoInput').click();
+  }
+
+  function fotoSeleccionada(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const src = ev.target.result;
+      fotoBase64 = src.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+
+      // Mostrar preview
+      const img = document.getElementById('imgPreview');
+      img.src = src;
+      img.style.display = 'block';
+      img.dataset.mediaType = mediaType;
+      document.getElementById('camPlaceholder').style.display = 'none';
+
+      // Mostrar botones
+      document.getElementById('btnCapture').style.display = 'none';
+      document.getElementById('btnEnviar').style.display = 'block';
+      document.getElementById('btnRetomar').style.display = 'block';
+
+      setStatus('waiting', '✓ Foto lista — toca "Enviar al notebook"');
+    };
+    reader.readAsDataURL(file);
+    // Limpiar input para permitir la misma foto de nuevo
+    e.target.value = '';
+  }
+
+  function retomar() {
+    fotoBase64 = null;
+    document.getElementById('imgPreview').style.display = 'none';
+    document.getElementById('camPlaceholder').style.display = 'flex';
+    document.getElementById('btnCapture').style.display = 'flex';
+    document.getElementById('btnEnviar').style.display = 'none';
+    document.getElementById('btnRetomar').style.display = 'none';
+    setStatus('waiting', '📷 Listo para fotografiar etiqueta');
+  }
+
+  async function enviarFoto() {
+    if (!fotoBase64 || enviando) return;
+    enviando = true;
+    const img = document.getElementById('imgPreview');
+    const mediaType = img.dataset.mediaType || 'image/jpeg';
+
+    setStatus('sending', '⟳ Enviando al notebook...');
+    document.getElementById('btnEnviar').disabled = true;
+
+    try {
+      const res = await fetch(BACKEND_URL + '/api/scanner/foto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario: getUsuario(),
+          imagenBase64: fotoBase64,
+          mediaType
+        })
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        setStatus('ok', '✅ Foto enviada — el notebook la está procesando');
+        agregarHistorial(img.src, true);
+        setTimeout(retomar, 2000);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch(e) {
+      setStatus('error', '❌ Error al enviar: ' + e.message);
+      document.getElementById('btnEnviar').disabled = false;
+    }
+    enviando = false;
+  }
+
+  function agregarHistorial(imgSrc, ok) {
+    const hist = document.getElementById('historial');
+    const hora = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const item = document.createElement('div');
+    item.className = 'hist-item';
+    item.innerHTML = `
+      <img class="hist-img" src="${imgSrc}">
+      <div>
+        <div class="${ok?'hist-ok':''}">
+          ${ok ? '✓ Enviada correctamente' : '✗ Error al enviar'}
+        </div>
+        <div class="hist-time">${hora}</div>
+      </div>`;
+    hist.insertBefore(item, hist.firstChild);
+
+    // Máximo 5 en historial
+    while (hist.children.length > 5) hist.removeChild(hist.lastChild);
+  }
+
+  // Verificar conexión al backend
+  async function verificarConexion() {
+    try {
+      const res = await fetch(BACKEND_URL + '/api/scanner/estado', { signal: AbortSignal.timeout(5000) });
+      const ok = res.ok;
+      const badge = document.getElementById('conn-badge');
+      badge.className = 'conn-badge ' + (ok ? 'conn-ok' : 'conn-err');
+      badge.textContent = ok ? '● Conectado' : '● Sin conexión';
+    } catch {
+      const badge = document.getElementById('conn-badge');
+      badge.className = 'conn-badge conn-err';
+      badge.textContent = '● Sin conexión';
+    }
+  }
+
+  verificarConexion();
+  setInterval(verificarConexion, 30000);
+</script>
+</body>
+</html>

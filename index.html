@@ -121,6 +121,30 @@
 
     <!-- INGRESAR -->
     <div class="view" id="view-ingresar">
+
+      <!-- ESCÁNER REMOTO DESDE CELULAR -->
+      <div style="background:#252522;border-radius:12px;padding:14px 16px;margin-bottom:14px;border:1px solid #3A3A36">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#C4953A">📱 Escáner desde celular</div>
+            <div style="font-size:11px;color:#8C8880;margin-top:2px">Toma la foto en el celular y se llena solo aquí</div>
+          </div>
+          <button id="btn-scanner-remoto"
+            onclick="toggleScannerRemoto()"
+            style="background:#C4953A;color:#1C1C1A;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">
+            ▷ Activar
+          </button>
+        </div>
+        <div id="sr-estado"
+          style="padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;background:rgba(196,149,58,0.1);color:#8C8880;border:1px solid #3A3A36">
+          Activa el escáner para recibir fotos del celular
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#8C8880;text-align:center">
+          Abre <strong style="color:#C4953A">scanner-app.html</strong> en tu celular
+          · <a href="scanner-app.html" target="_blank" style="color:#C4953A;text-decoration:none">Abrir ahora →</a>
+        </div>
+      </div>
+
       <!-- Scanner -->
       <div class="scanner-box" id="scannerBox">
         <div class="cam-area" id="camArea">
