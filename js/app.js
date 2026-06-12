@@ -1172,18 +1172,30 @@ function generarEtiqueta() {
   </div>`;
 
   // Generar código de barras Code128
+  // Asegurar que siempre haya un código
+  if (!datos.barras) {
+    datos.barras = generarCodigoBarras({ id: datos.id || datos.sku || Date.now().toString() });
+  }
   try {
-    JsBarcode('#barcode-svg', datos.barras, {
-      format: 'CODE128',
-      width: 2,
-      height: 50,
-      displayValue: false,
-      margin: 0,
-      lineColor: '#1a3a2a',
-      background: '#ffffff'
-    });
+    if (typeof JsBarcode !== 'undefined' && datos.barras) {
+      JsBarcode('#barcode-svg', datos.barras, {
+        format: 'CODE128',
+        width: 2,
+        height: 50,
+        displayValue: true,
+        fontSize: 11,
+        margin: 4,
+        lineColor: '#1a3a2a',
+        background: '#ffffff'
+      });
+    } else {
+      document.getElementById('barcode-svg').outerHTML = 
+        '<div style="padding:8px;font-size:11px;color:#1a3a2a;font-weight:700;font-family:monospace">' + datos.barras + '</div>';
+    }
   } catch(e) {
     console.warn('Barcode error:', e);
+    document.getElementById('barcode-svg').outerHTML = 
+      '<div style="padding:8px;font-size:11px;color:#1a3a2a;font-weight:700;font-family:monospace">' + datos.barras + '</div>';
   }
 
   document.getElementById('etiqueta-preview').style.display = 'block';
