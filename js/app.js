@@ -1420,3 +1420,150 @@ function escanearYDescontarCodigo() {
 function handleBarcodeScan(e) {
   if (e.key === 'Enter') escanearYDescontarCodigo();
 }
+
+// ============================================================
+//  ESCÁNER REMOTO — Recibe fotos desde el celular
+// ============================================================
+
+const ScannerRemoto = (() => {
+  let pollingActivo = false;
+  let intervalId   = null;
+  const BACKEND    = 'https://frigocarnes-backend-production.up.railway.app';
+
+  function getUsuario() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('frigocarnes_session'));
+      return s?.usuario || 'Administrador';
+    } catch { return 'Administrador'; }
+  }
+
+  function actualizarEstadoPanel(estado, texto) {
+    const el = document.getElementById('sr-estado');
+    if (!el) return;
+    const colores = {
+      esperando:  { bg: 'rgba(196,149,58,0.1)',  color: '#C4953A', border: 'rgba(196,149,58,0.3)' },
+      recibiendo: { bg: 'rgba(255,255,255,0.05)', color: '#8C8880', border: '#3A3A36' },
+      procesando: { bg: 'rgba(255,255,255,0.05)', color: '#C4953A', border: '#3A3A36' },
+      listo:      { bg: 'rgba(74,124,89,0.15)',   color: '#6BAF84', border: 'rgba(74,124,89,0.3)' },
+      error:      { bg: 'rgba(139,26,42,0.15)',   color: '#C4536A', border: 'rgba(139,26,42,0.3)' }
+    };
+    const c = colores[estado] || colores.esperando;
+    el.style.background = c.bg;
+    el.style.color = c.color;
+    el.style.border = '1px solid ' + c.border;
+    el.textContent = texto;
+  }
+
+  async function procesarFoto(imagenBase64, mediaType) {
+    actualizarEstadoPanel('procesando', '⟳ IA leyendo la etiqueta...');
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imagenBase64 } },
+              { type: 'text', text: 'Eres un sistema OCR para etiquetas de carne. Extrae todos los datos visibles. Responde SOLO con JSON válido sin markdown:\n{"sku":"","nombre":"","tipo":"Vacuno/Cerdo/Pollo/Cordero","lote":"","pesoNeto":0,"pesoBruto":0,"piezas":1,"fechaProduccion":"YYYY-MM-DD","fechaVencimiento":"YYYY-MM-DD","proveedor":"","planta":"","pais":"","temperatura":"","codigoBarras":"","certificaciones":"","observaciones":""}' }
+            ]
+          }]
+        })
+      });
+      if (!res.ok) throw new Error('Error API ' + res.status);
+      const data = await res.json();
+      const txt = (data.content || []).map(b => b.text || '').join('').trim();
+      let parsed;
+      try { parsed = JSON.parse(txt.replace(/```json|```/g, '').trim()); }
+      catch { parsed = {}; }
+
+      const set = (id, val) => {
+        if (!val && val !== 0) return;
+        const el = document.getElementById(id);
+        if (el) { el.value = val; el.classList.add('autofilled'); }
+      };
+      const matchSel = (id, val) => {
+        if (!val) return;
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const match = [...sel.options].find(o =>
+          o.value.toLowerCase().includes(String(val).toLowerCase()) ||
+          String(val).toLowerCase().includes(o.value.toLowerCase())
+        );
+        if (match) sel.value = match.value;
+      };
+
+      set('f-sku', parsed.sku);
+      set('f-nombre', parsed.nombre);
+      set('f-lote', parsed.lote);
+      set('f-barras', parsed.codigoBarras);
+      set('f-peso-neto', parsed.pesoNeto);
+      set('f-peso-bruto', parsed.pesoBruto);
+      set('f-piezas', parsed.piezas || 1);
+      set('f-fprod', parsed.fechaProduccion);
+      set('f-fenv', parsed.fechaEnvasado);
+      set('f-fvcto', parsed.fechaVencimiento);
+      set('f-prov', parsed.proveedor);
+      set('f-planta', parsed.planta);
+      set('f-cert', parsed.certificaciones);
+      set('f-obs', parsed.observaciones);
+      matchSel('f-tipo', parsed.tipo);
+      matchSel('f-pais', parsed.pais);
+      matchSel('f-temp', parsed.temperatura);
+
+      if (!document.getElementById('f-id').value) {
+        document.getElementById('f-id').value = DB.getNextId();
+      }
+      const sess = DB.getSession();
+      if (sess) { const op = document.getElementById('f-op'); if(op) op.value = sess.usuario; }
+
+      actualizarEstadoPanel('listo', '✅ Formulario llenado — revisa y registra la caja');
+      App.showToast('✓ Etiqueta leída desde el celular');
+      setTimeout(() => actualizarEstadoPanel('esperando', '📷 Esperando nueva foto del celular...'), 6000);
+
+      await fetch(BACKEND + '/api/scanner/pendiente/' + encodeURIComponent(getUsuario()), { method: 'DELETE' });
+    } catch(err) {
+      console.error('[ScannerRemoto] Error:', err);
+      actualizarEstadoPanel('error', '❌ Error: ' + err.message);
+      setTimeout(() => actualizarEstadoPanel('esperando', '📷 Esperando nueva foto del celular...'), 4000);
+    }
+  }
+
+  async function poll() {
+    if (!pollingActivo) return;
+    try {
+      const usuario = getUsuario();
+      const res = await fetch(BACKEND + '/api/scanner/pendiente/' + encodeURIComponent(usuario));
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.hay_foto) {
+        actualizarEstadoPanel('recibiendo', '📥 Foto recibida, procesando...');
+        await procesarFoto(data.imagenBase64, data.mediaType);
+      }
+    } catch(e) {}
+  }
+
+  function iniciar() {
+    if (pollingActivo) return;
+    pollingActivo = true;
+    intervalId = setInterval(poll, 1000);
+    actualizarEstadoPanel('esperando', '📷 Esperando nueva foto del celular...');
+    const usuario = getUsuario();
+    const link = document.getElementById('link-scanner-celular');
+    if (link) {
+      const base = link.href.split('?')[0];
+      link.href = base + '?usuario=' + encodeURIComponent(usuario);
+    }
+    console.log('[ScannerRemoto] Iniciado para:', usuario);
+  }
+
+  function detener() {
+    pollingActivo = false;
+    if (intervalId) { clearInterval(intervalId); intervalId = null; }
+    console.log('[ScannerRemoto] Detenido');
+  }
+
+  return { iniciar, detener, activo: () => pollingActivo };
+})();
