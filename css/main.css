@@ -3,32 +3,37 @@
    ============================================= */
 
 :root {
-  --bg: #ffffff;
-  --bg2: #f4f6f9;
-  --bg3: #e8ecf2;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --primary: #1e6fd9;
-  --primary-dark: #1558b0;
-  --cold: #0891b2;
-  --ok: #059669;
-  --warn: #d97706;
-  --danger: #dc2626;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 4px rgba(0,0,0,0.08);
-  --shadow-lg: 0 4px 24px rgba(0,0,0,0.12);
+  /* Paleta A — Carbón + Oro */
+  --bg:           #F5F0E8;   /* Blanco cálido */
+  --bg2:          #EDE8DF;   /* Blanco cálido oscurecido */
+  --bg3:          #E0DAD0;   /* Fondo terciario */
+  --text:         #1C1C1A;   /* Carbón profundo */
+  --muted:        #8C8880;   /* Piedra */
+  --border:       #D5CFC5;   /* Borde sutil */
+  --primary:      #C4953A;   /* Oro envejecido */
+  --primary-dark: #A67B2E;   /* Oro oscuro hover */
+  --cold:         #1C1C1A;   /* Carbón para badges fríos */
+  --ok:           #4A7C59;   /* Verde apagado */
+  --warn:         #C4953A;   /* Oro para advertencias */
+  --danger:       #8B1A2A;   /* Burdeos para errores */
+  --radius:       10px;
+  --radius-lg:    14px;
+  --shadow:       0 1px 4px rgba(28,28,26,0.08);
+  --shadow-lg:    0 4px 24px rgba(28,28,26,0.14);
+  --carbon:       #1C1C1A;
+  --gold:         #C4953A;
+  --stone:        #8C8880;
+  --warm-white:   #F5F0E8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f172a;
-    --bg2: #1e293b;
-    --bg3: #293548;
-    --text: #f1f5f9;
-    --muted: #94a3b8;
-    --border: #334155;
+    --bg:     #1C1C1A;
+    --bg2:    #252522;
+    --bg3:    #2E2E2A;
+    --text:   #F5F0E8;
+    --muted:  #8C8880;
+    --border: #3A3A36;
   }
 }
 
@@ -39,25 +44,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 /* ---- LOGIN ---- */
 .login-screen {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(145deg, #0a1628 0%, #1e3a5c 100%); padding: 24px;
+  background: linear-gradient(145deg, #1C1C1A 0%, #2E2E2A 60%, #3A3531 100%); padding: 24px;
 }
 .login-box { background: var(--bg); border-radius: 20px; padding: 32px 24px; width: 100%; max-width: 360px; box-shadow: var(--shadow-lg); }
 .login-logo { text-align: center; margin-bottom: 28px; }
 .login-icon { font-size: 48px; margin-bottom: 8px; }
-.login-brand { font-size: 26px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+.login-brand { font-size: 26px; font-weight: 700; color: var(--carbon); letter-spacing: -0.5px; }
 .login-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .login-hint { text-align: center; font-size: 11px; color: var(--muted); margin-top: 12px; }
 .error-msg { color: var(--danger); font-size: 12px; text-align: center; margin-top: 8px; }
 
 /* ---- TOPBAR ---- */
-.topbar { background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+.topbar { background: var(--carbon); border-bottom: 1px solid #2E2E2A; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(28,28,26,0.25); }
 .topbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; }
 .logo { display: flex; align-items: center; gap: 10px; }
 .logo-icon { font-size: 24px; }
-.logo-name { font-size: 16px; font-weight: 700; color: var(--primary); }
-.logo-sub { font-size: 11px; color: var(--muted); }
-.temp-badge { background: #e0f2fe; color: var(--cold); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
-.icon-btn { background: none; border: none; font-size: 16px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+.logo-name { font-size: 16px; font-weight: 700; color: var(--gold); }
+.logo-sub { font-size: 11px; color: rgba(245,240,232,0.5); }
+.temp-badge { background: rgba(196,149,58,0.15); color: var(--gold); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(196,149,58,0.3); }
+.icon-btn { background: none; border: none; font-size: 16px; cursor: pointer; color: rgba(245,240,232,0.6); padding: 4px 8px; border-radius: 6px; }
 .icon-btn:hover { background: var(--bg2); }
 
 /* ---- NAV TABS ---- */
@@ -77,8 +82,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
 .stat-val { font-size: 28px; font-weight: 700; line-height: 1; }
 .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-.stat-ok .stat-val { color: var(--ok); }
-.stat-cold .stat-val { color: var(--cold); }
+.stat-ok .stat-val { color: var(--carbon); }
+.stat-cold .stat-val { color: var(--gold); }
 .stat-warn .stat-val { color: var(--warn); }
 
 /* ---- SECTION TITLE ---- */
@@ -125,8 +130,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 /* ---- BOTONES ---- */
 .btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 11px 16px; border-radius: var(--radius-lg); border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
 .btn:active { transform: scale(.98); }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary { background: var(--gold); color: var(--carbon); font-weight: 700; }
+.btn-primary:hover { background: var(--primary-dark); color: var(--carbon); }
 .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 .btn-scan { background: #0a1628; color: #fff; }
 .btn-capture { background: var(--primary); color: #fff; }
@@ -278,7 +283,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   background: var(--bg2);
 }
 .chip-active, .chip.chip-active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+  background: var(--carbon);
+  color: var(--gold);
+  border-color: var(--carbon);
+  font-weight: 700;
 }

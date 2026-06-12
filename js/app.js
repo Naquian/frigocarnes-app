@@ -1157,10 +1157,8 @@ function generarEtiqueta() {
 
     <!-- CÓDIGO DE BARRAS -->
     <div style="padding:8px 14px 10px;text-align:center;border-top:1px solid #e2e8f0">
-      <canvas id="barcode-canvas" style="max-width:100%"></canvas>
-      <div style="font-size:9px;color:#64748b;margin-top:2px">
-        ${datos.barras||''}
-      </div>
+      <div id="barcode-wrapper"></div>
+      <div style="font-size:9px;color:#64748b;margin-top:2px">${datos.barras||''}</div>
     </div>
 
     <!-- FOOTER NORMATIVO -->
@@ -1173,11 +1171,12 @@ function generarEtiqueta() {
   document.getElementById('etiqueta-preview').style.display = 'block';
   window._datosEtiquetaActual = datos;
 
-  // Dibujar barcode DESPUÉS de que el DOM tenga el canvas
-  setTimeout(() => {
-    const canvas = document.getElementById('barcode-canvas');
-    if (!canvas) { console.warn('barcode-canvas no encontrado'); return; }
-    console.log('[Barcode] Dibujando:', datos.barras, 'en canvas:', canvas);
+  // Crear canvas programáticamente y dibujar (evita problemas con canvas vía innerHTML)
+  const wrapper = document.getElementById('barcode-wrapper');
+  if (wrapper) {
+    const canvas = document.createElement('canvas');
+    canvas.style.maxWidth = '100%';
+    wrapper.appendChild(canvas);
     try {
       Barcode.draw(canvas, datos.barras, {
         width: 2,
@@ -1188,11 +1187,10 @@ function generarEtiqueta() {
         lineColor: '#1a3a2a',
         background: '#ffffff'
       });
-      console.log('[Barcode] OK');
     } catch(e) {
       console.error('[Barcode] Error:', e);
     }
-  }, 200);
+  }
 
   App.showToast('✓ Etiqueta generada');
 }
