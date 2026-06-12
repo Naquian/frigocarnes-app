@@ -1171,15 +1171,19 @@ function generarEtiqueta() {
     </div>
   </div>`;
 
-  // Asegurar que siempre haya un código
+  // Asegurar código ANTES de insertar el HTML
   if (!datos.barras) {
     datos.barras = generarCodigoBarras({ id: datos.id || datos.sku || Date.now().toString() });
   }
 
-  // Generar código de barras con librería propia
+  document.getElementById('etiqueta-preview').style.display = 'block';
+  window._datosEtiquetaActual = datos;
+
+  // Dibujar barcode DESPUÉS de que el DOM tenga el canvas
   setTimeout(() => {
     const canvas = document.getElementById('barcode-canvas');
-    if (!canvas || !datos.barras) return;
+    if (!canvas) { console.warn('barcode-canvas no encontrado'); return; }
+    console.log('[Barcode] Dibujando:', datos.barras, 'en canvas:', canvas);
     try {
       Barcode.draw(canvas, datos.barras, {
         width: 2,
@@ -1190,14 +1194,13 @@ function generarEtiqueta() {
         lineColor: '#1a3a2a',
         background: '#ffffff'
       });
+      console.log('[Barcode] OK');
     } catch(e) {
-      console.warn('Barcode error:', e);
+      console.error('[Barcode] Error:', e);
     }
-  }, 150);
+  }, 200);
 
-  document.getElementById('etiqueta-preview').style.display = 'block';
-  window._datosEtiquetaActual = datos;
-  App.showToast('✓ Etiqueta con código de barras generada');
+  App.showToast('✓ Etiqueta generada');
 }
 function imprimirEtiqueta() {
   const etiqueta = document.getElementById('etiqueta-print');
