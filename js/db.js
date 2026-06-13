@@ -118,10 +118,10 @@ const DB = (() => {
       try {
         const raw = localStorage.getItem(KEY_STOCK);
         if (!raw) {
-          // Primera vez: cargar demo
-          localStorage.setItem(KEY_STOCK, JSON.stringify(DEMO_STOCK));
-          localStorage.setItem(KEY_COUNTER, '5');
-          return [...DEMO_STOCK];
+          // Sin datos — empezar vacío (no cargar demo)
+          localStorage.setItem(KEY_STOCK, JSON.stringify([]));
+          localStorage.setItem(KEY_COUNTER, '0');
+          return [];
         }
         return JSON.parse(raw);
       } catch { return []; }
