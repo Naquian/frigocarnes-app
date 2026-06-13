@@ -75,7 +75,7 @@ function switchTabDespacho(tab) {
 // ── Selector de cajas para nuevo pedido ──────────────────
 function renderSelectorCajas() {
   const s    = (document.getElementById('np-search')?.value||'').toLowerCase();
-  const modo = document.getElementById('np-modo')?.value || 'fefo';
+  const modo = 'fefo'; // FEFO automático siempre
   const lista = document.getElementById('np-cajas-lista');
   if (!lista) return;
 
@@ -121,7 +121,7 @@ function renderSelectorCajas() {
     // Badge FEFO top-right
     if (esPrimera && dias <= 60) {
       const tagBg = dias < 0 ? '#dc2626' : dias <= 7 ? '#d97706' : '#2d6a4f';
-      html += '<div style="float:right;background:'+tagBg+';color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:8px">'+(modo==='fifo'?'FIFO':'FEFO')+' #'+(i+1)+'</div>';
+      html += '<div style="float:right;background:'+tagBg+';color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:8px">'+'FEFO'+' #'+(i+1)+'</div>';
     }
 
     html += '<div style="display:flex;align-items:flex-start;gap:10px">';
@@ -140,7 +140,7 @@ function renderSelectorCajas() {
     if (esPrimera) {
       const pBg = dias<0?'#fee2e2':dias<=7?'#fef3c7':'#d8f3dc';
       const pColor = dias<0?'#991b1b':dias<=7?'#92400e':'#1a3a2a';
-      const pLabel = dias<0?'🔴 VENCIDA — despachar urgente':dias<=7?'⚠ Despachar esta semana':'✅ Prioridad '+( modo==='fifo'?'FIFO':'FEFO');
+      const pLabel = dias<0?'🔴 VENCIDA — despachar urgente':dias<=7?'⚠ Despachar esta semana':'✅ Prioridad '+( 'FEFO');
       html += '<div style="margin-top:5px"><span style="background:'+pBg+';color:'+pColor+';font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">'+pLabel+'</span></div>';
     }
 
