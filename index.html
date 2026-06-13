@@ -72,7 +72,7 @@
       <button class="nav-tab active" data-view="dashboard" onclick="irA('dashboard')">&#9783; Inicio</button>
       <button class="nav-tab" data-view="stock" onclick="irA('stock')">&#9723; Stock</button>
       <button class="nav-tab" data-view="ingresar" onclick="irA('ingresar')">&#43; Ingresar Stock</button>
-      <button class="nav-tab" data-view="despacho" onclick="irA('despacho')">&#128230; Generar Pedido</button>
+      <button class="nav-tab" data-view="despacho" onclick="irA('despacho')" style="position:relative">&#128230; Generar Pedido<span id="pedido-badge-top" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:#dc2626;color:#fff;border-radius:10px;padding:0 4px;font-size:10px;font-weight:700;line-height:16px;text-align:center"></span></button>
       <button class="nav-tab" data-view="alertas" onclick="irA('alertas')" style="position:relative">&#9888; Alertas<span id="alerta-badge-top" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:#dc2626;border-radius:50%"></span></button>
       <button class="nav-tab" data-view="etiquetas" onclick="irA('etiquetas')">&#127991; Etiquetas</button>
       <button class="nav-tab supervisor-only" data-view="reportes" onclick="irA('reportes')">&#9998; Reportes</button>
@@ -583,7 +583,7 @@
     <button class="bnav-btn active" data-v="dashboard" onclick="irA('dashboard',this)">&#9783;<span>Inicio</span></button>
     <button class="bnav-btn" data-v="stock" onclick="irA('stock',this)">&#9723;<span>Stock</span></button>
     <button class="bnav-btn" data-v="ingresar" onclick="irA('ingresar',this)">&#43;<span>Ingresar</span></button>
-    <button class="bnav-btn" data-v="despacho" onclick="irA('despacho',this)">&#128230;<span>Pedido</span></button>
+    <button class="bnav-btn" data-v="despacho" onclick="irA('despacho',this)" style="position:relative">&#128230;<span>Pedido</span><span id="pedido-badge-bnav" style="display:none;position:absolute;top:4px;right:10px;min-width:16px;height:16px;background:#dc2626;color:#fff;border-radius:10px;padding:0 4px;font-size:10px;font-weight:700;line-height:16px;text-align:center"></span></button>
     <button class="bnav-btn" data-v="alertas" onclick="irA('alertas',this)" style="position:relative">&#9888;<span>Alertas</span><span id="alerta-badge-bnav" style="display:none;position:absolute;top:4px;right:10px;width:8px;height:8px;background:#dc2626;border-radius:50%"></span></button>
     <button class="bnav-btn" data-v="etiquetas" onclick="irA('etiquetas',this)">&#127991;<span>Etiquetas</span></button>
   </nav>
