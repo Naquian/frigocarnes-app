@@ -1143,25 +1143,30 @@ function cerrarModalReset() {
   if (btn && btn._interval) clearInterval(btn._interval);
 }
 
-function ejecutarResetTotal() {
+async function ejecutarResetTotal() {
   const modal = document.getElementById('modal-reset');
   if (modal) modal.style.display = 'none';
 
-  // 1. Enviar reset a Sheets
+  // Mostrar progreso
+  const toast = document.getElementById('toast');
+  if (toast) { toast.textContent = '⏳ Borrando datos...'; toast.style.display = 'block'; }
+
+  // 1. Enviar reset a Sheets y esperar
   try {
-    fetch(SHEETS_CONFIG.url, {
+    await fetch(SHEETS_CONFIG.url, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tipo: 'reset_total' })
     });
   } catch(e) {}
 
-  // 2. Limpiar localStorage
+  // 2. Limpiar TODO el localStorage
   localStorage.clear();
+  sessionStorage.clear();
 
   // 3. Recargar
-  App.showToast('✓ Datos borrados — recargando...');
-  setTimeout(() => location.reload(), 1000);
+  if (toast) { toast.textContent = '✓ Datos borrados — recargando...'; }
+  setTimeout(() => { window.location.href = window.location.href.split('?')[0]; }, 1200);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
