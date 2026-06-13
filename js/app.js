@@ -277,6 +277,8 @@ function filtrarCajas() {
   });
 
   let cajas = stock.filter(c => {
+    // Nunca mostrar despachados en el stock
+    if (c.estado === 'Despachado') return false;
     if (search) {
       const h = [c.id, c.sku, c.lote, c.nombre, c.proveedor, c.tipo, c.camara].join(' ').toLowerCase();
       if (!h.includes(search)) return false;
@@ -284,7 +286,7 @@ function filtrarCajas() {
     if (f === 'todos') return true;
     if (f === 'vcto7') {
       const d = Math.ceil((new Date(c.fecVcto) - hoy) / 86400000);
-      return d >= 0 && d <= 7 && c.estado !== 'Despachado';
+      return d >= 0 && d <= 7;
     }
     return c.estado === f;
   }).sort((a, b) => new Date(a.fecVcto) - new Date(b.fecVcto));
@@ -1101,6 +1103,66 @@ const ScannerRemoto = (() => {
 // ============================================================
 //  INIT
 // ============================================================
+
+
+function resetearAppCompleto() {
+  // Solo supervisores
+  const s = DB.getSession();
+  if (!s || s.rol !== 'supervisor') return;
+
+  const modal = document.getElementById('modal-reset');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  // Countdown de 5 segundos
+  const btn = document.getElementById('btn-confirmar-reset');
+  const span = document.getElementById('reset-countdown');
+  btn.disabled = true;
+  btn.style.background = '#9ca3af';
+  btn.style.cursor = 'not-allowed';
+  let secs = 5;
+  span.textContent = secs;
+  const interval = setInterval(() => {
+    secs--;
+    span.textContent = secs;
+    if (secs <= 0) {
+      clearInterval(interval);
+      btn.disabled = false;
+      btn.style.background = '#dc2626';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = 'Borrar todo';
+    }
+  }, 1000);
+  btn._interval = interval;
+}
+
+function cerrarModalReset() {
+  const modal = document.getElementById('modal-reset');
+  if (modal) modal.style.display = 'none';
+  const btn = document.getElementById('btn-confirmar-reset');
+  if (btn && btn._interval) clearInterval(btn._interval);
+}
+
+function ejecutarResetTotal() {
+  const modal = document.getElementById('modal-reset');
+  if (modal) modal.style.display = 'none';
+
+  // 1. Enviar reset a Sheets
+  try {
+    fetch(SHEETS_CONFIG.url, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'reset_total' })
+    });
+  } catch(e) {}
+
+  // 2. Limpiar localStorage
+  localStorage.clear();
+
+  // 3. Recargar
+  App.showToast('✓ Datos borrados — recargando...');
+  setTimeout(() => location.reload(), 1000);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const session = DB.getSession();
