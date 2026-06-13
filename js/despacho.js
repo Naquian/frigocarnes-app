@@ -224,8 +224,15 @@ function crearPedido() {
   DespachoState.limpiar();
   document.getElementById('np-cliente').value = '';
   document.getElementById('np-oc').value = '';
-  switchTabDespacho('activos');
   renderDashboard();
+
+  // Solo supervisores van a la pestaña Pedidos y ven el remito automáticamente
+  const sesion = DB.getSession();
+  if (sesion && sesion.rol === 'supervisor') {
+    switchTabDespacho('activos');
+    setTimeout(() => verRemito(numPedStr), 300);
+  }
+  // Operarios se quedan en Nuevo Pedido (sin acceso a remito ni confirmar salida)
 }
 
 // ── Pedidos activos ───────────────────────────────────────
@@ -282,7 +289,7 @@ function renderPedidosActivos() {
       <div style="font-size:11px;color:#64748b;margin-bottom:10px">${tiposStr}</div>
       <div style="display:flex;gap:8px">
         <button onclick="verRemito('${p.id}')" class="btn btn-secondary" style="flex:1;font-size:12px">📄 Remito</button>
-        ${isPend?`<button onclick="confirmarSalida('${p.id}')" style="flex:2;background:#1a3a2a;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">🚚 Confirmar Salida</button>`:''}
+        ${(()=>{const s=DB.getSession();const esSup=s&&(s.rol==='supervisor'||s.rol==='admin');return isPend&&esSup?`<button onclick="confirmarSalida('${p.id}')" style="flex:2;background:#1a3a2a;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">🚚 Confirmar Salida</button>`:'';})()}
       </div>
     </div>`;
   }).join('');
