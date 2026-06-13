@@ -20,6 +20,11 @@
   box-shadow: 0 0 0 2px rgba(220,38,38,0.2);
 }
 .supervisor-only { display: none; }
+
+  @keyframes parpadeoAzul {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.2; transform: scale(0.8); }
+  }
 </style>
 </head>
 <body>
@@ -308,11 +313,16 @@
               style="border:none;background:rgba(0,0,0,0.08);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;color:var(--muted)">✕</button>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-            <button onclick="document.getElementById('np-search').value='Vacuno';renderSelectorCajas()" class="chip">🐄 Vacuno</button>
-            <button onclick="document.getElementById('np-search').value='Cerdo';renderSelectorCajas()" class="chip">🐷 Cerdo</button>
-            <button onclick="document.getElementById('np-search').value='Pollo';renderSelectorCajas()" class="chip">🐔 Pollo</button>
-            <button onclick="document.getElementById('np-search').value='Cordero';renderSelectorCajas()" class="chip">🐑 Cordero</button>
-            <button onclick="document.getElementById('np-search').value='';renderSelectorCajas()" class="chip chip-active">Todos</button>
+            <button onclick="setFiltroPedido('',this)" class="chip chip-active" id="chip-np-todos">Todos</button>
+            <button onclick="setFiltroPedido('Vacuno',this)" class="chip">🐄 Vacuno</button>
+            <button onclick="setFiltroPedido('Cerdo',this)" class="chip">🐷 Cerdo</button>
+            <button onclick="setFiltroPedido('Pollo',this)" class="chip">🐔 Pollo</button>
+            <button onclick="setFiltroPedido('Cordero',this)" class="chip">🐑 Cordero</button>
+            <button onclick="setFiltroPedido('__reservados__',this)" class="chip supervisor-only" id="chip-np-reservados"
+              style="position:relative;display:none">
+              📌 Reservados
+              <span id="dot-reservados" style="position:absolute;top:4px;right:4px;width:7px;height:7px;background:#3b82f6;border-radius:50%;animation:parpadeoAzul 1.2s infinite"></span>
+            </button>
           </div>
         </div>
 
@@ -526,14 +536,7 @@
           <input class="form-input" id="eq-id" readonly style="background:var(--bg3);cursor:not-allowed;opacity:0.8;font-weight:600" placeholder="—">
         </div>
 
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="generarEtiqueta()" style="flex:1">
-            🏷 Generar Etiqueta
-          </button>
-          <button class="btn btn-secondary" onclick="cargarDesdeCaja()" style="flex:1">
-            📦 Desde stock
-          </button>
-        </div>
+
       </div>
 
       <!-- Preview etiqueta -->
