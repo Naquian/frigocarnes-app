@@ -34,26 +34,29 @@
     --text:   #F5F0E8;
     --muted:  #8C8880;
     --border: #3A3A36;
-    --carbon: #F5F0E8;
   }
-  /* Texto sobre fondos oscuros */
-  .stat-ok .stat-val { color: var(--text); }
-  .login-brand { color: var(--gold) !important; }
-  /* Botón primario: texto oscuro sobre fondo dorado — correcto en ambos modos */
-  .btn-primary { color: #1C1C1A !important; }
-  .btn-primary:hover { color: #1C1C1A !important; }
-  /* Inputs y selects */
-  .form-row input, .form-row select, .form-row textarea {
-    color-scheme: dark;
+  /* Stats inicio */
+  .stat-ok .stat-val  { color: var(--text); }
+  .stat-val           { color: var(--text); }
+  .stat-label         { color: var(--muted); }
+  .stat-sub           { color: var(--muted); }
+  /* Login */
+  .login-brand        { color: var(--gold) !important; }
+  /* Inputs — forzar fondo y texto oscuro */
+  input, select, textarea {
+    background: var(--bg2) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
   }
-  /* Panel escáner */
-  .panel-scanner { background: var(--bg2); }
-  /* Topbar ya es oscuro — OK */
-  /* Cards */
-  .caja-card { color: var(--text); }
-  .stat-card { color: var(--text); }
-  /* Selectores del sistema */
-  select option { background: var(--bg2); color: var(--text); }
+  input::placeholder  { color: var(--muted) !important; }
+  select option       { background: var(--bg2); color: var(--text); }
+  /* Autofill override */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #252522 inset !important;
+    -webkit-text-fill-color: #F5F0E8 !important;
+  }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
