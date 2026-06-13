@@ -323,3 +323,35 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   border-color: var(--carbon);
   font-weight: 700;
 }
+
+/* ===== MODO OSCURO: ETIQUETA siempre en fondo blanco ===== */
+@media (prefers-color-scheme: dark) {
+  #etiqueta-print, #etiqueta-contenido, #etiqueta-contenido * {
+    color: initial !important;
+  }
+  #etiqueta-contenido {
+    background: #fff !important;
+  }
+  .etiqueta-print-wrap {
+    background: #fff !important;
+  }
+  /* Inputs modo oscuro */
+  input, select, textarea {
+    background: var(--bg2) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  input::placeholder { color: var(--muted) !important; }
+  select option { background: var(--bg2); color: var(--text); }
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #252522 inset !important;
+    -webkit-text-fill-color: #F5F0E8 !important;
+  }
+  /* Stats inicio */
+  .stat-val { color: var(--text); }
+  .stat-ok .stat-val { color: var(--text); }
+  /* Login */
+  .login-brand { color: var(--gold) !important; }
+}
