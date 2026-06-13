@@ -1029,10 +1029,18 @@ const ScannerRemoto = (() => {
       set('f-cert', parsed.certificaciones);
       set('f-obs', parsed.observaciones);
 
-      // Tipo de carne: set directamente (opciones coinciden exactamente)
+      // Tipo de carne — búsqueda flexible para cubrir variantes del OCR
       if (parsed.tipo) {
         const tipoEl = document.getElementById('f-tipo');
-        if (tipoEl) tipoEl.value = parsed.tipo;
+        if (tipoEl) {
+          const tipoNorm = parsed.tipo.toLowerCase().trim();
+          const match = [...tipoEl.options].find(o =>
+            o.value.toLowerCase() === tipoNorm ||
+            o.value.toLowerCase().includes(tipoNorm) ||
+            tipoNorm.includes(o.value.toLowerCase())
+          );
+          if (match) tipoEl.value = match.value;
+        }
       }
 
       // País
@@ -1167,6 +1175,79 @@ async function ejecutarResetTotal() {
   // 3. Recargar
   if (toast) { toast.textContent = '✓ Datos borrados — recargando...'; }
   setTimeout(() => { window.location.href = window.location.href.split('?')[0]; }, 1200);
+}
+
+function simularEtiquetaPrueba() {
+  // Datos de etiqueta de prueba realistas
+  const demos = [
+    { sku:'VAC-LOM-001', nombre:'Lomo liso vacuno', tipo:'Vacuno', lote:'L-'+new Date().getFullYear()+'-001',
+      pesoNeto:21.4, pesoBruto:23.0, piezas:1, fechaProduccion: (() => { const d=new Date(); d.setDate(d.getDate()-2); return d.toISOString().split('T')[0]; })(),
+      fechaVencimiento: (() => { const d=new Date(); d.setDate(d.getDate()+150); return d.toISOString().split('T')[0]; })(),
+      proveedor:'Frigorífico Sur SpA', pais:'Chile', planta:'Planta Maipú',
+      codigoBarras:'7802345678901', certificaciones:'SEREMI N°456, PABCO' },
+    { sku:'CER-PAL-002', nombre:'Paleta cerdo deshuesada', tipo:'Cerdo', lote:'L-'+new Date().getFullYear()+'-002',
+      pesoNeto:18.5, pesoBruto:20.0, piezas:1, fechaProduccion: (() => { const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; })(),
+      fechaVencimiento: (() => { const d=new Date(); d.setDate(d.getDate()+90); return d.toISOString().split('T')[0]; })(),
+      proveedor:'CarnesCL Ltda.', pais:'Chile', planta:'Planta Lampa',
+      codigoBarras:'7801234567890', certificaciones:'PABCO' },
+    { sku:'POL-PEC-003', nombre:'Pechuga pollo sin hueso', tipo:'Pollo', lote:'L-'+new Date().getFullYear()+'-003',
+      pesoNeto:12.0, pesoBruto:13.2, piezas:6, fechaProduccion: (() => { const d=new Date(); return d.toISOString().split('T')[0]; })(),
+      fechaVencimiento: (() => { const d=new Date(); d.setDate(d.getDate()+60); return d.toISOString().split('T')[0]; })(),
+      proveedor:'Agrosuper S.A.', pais:'Chile', planta:'Agrosuper Rosario',
+      codigoBarras:'7804567891230', certificaciones:'ISO 22000' },
+  ];
+  const parsed = demos[Math.floor(Math.random() * demos.length)];
+
+  const set = (id, val) => {
+    if (!val && val !== 0) return;
+    const el = document.getElementById(id);
+    if (el) { el.value = val; el.classList.add('autofilled'); }
+  };
+
+  set('f-sku',       parsed.sku);
+  set('f-nombre',    parsed.nombre);
+  set('f-lote',      parsed.lote);
+  set('f-barras',    parsed.codigoBarras);
+  set('f-peso-neto', parsed.pesoNeto);
+  set('f-peso-bruto',parsed.pesoBruto);
+  set('f-piezas',    parsed.piezas || 1);
+  set('f-fprod',     parsed.fechaProduccion);
+  set('f-fvcto',     parsed.fechaVencimiento);
+  set('f-prov',      parsed.proveedor);
+  set('f-planta',    parsed.planta);
+  set('f-cert',      parsed.certificaciones);
+
+  // Tipo de carne — búsqueda flexible en las opciones del select
+  if (parsed.tipo) {
+    const tipoEl = document.getElementById('f-tipo');
+    if (tipoEl) {
+      const tipoNorm = parsed.tipo.toLowerCase().trim();
+      // Búsqueda exacta primero, luego parcial
+      const match = [...tipoEl.options].find(o =>
+        o.value.toLowerCase() === tipoNorm ||
+        o.value.toLowerCase().includes(tipoNorm) ||
+        tipoNorm.includes(o.value.toLowerCase())
+      );
+      if (match) tipoEl.value = match.value;
+    }
+  }
+
+  // País
+  if (parsed.pais) {
+    const paisEl = document.getElementById('f-pais');
+    if (paisEl) {
+      const match = [...paisEl.options].find(o =>
+        o.value.toLowerCase().includes(parsed.pais.toLowerCase()) ||
+        parsed.pais.toLowerCase().includes(o.value.toLowerCase())
+      );
+      if (match) paisEl.value = match.value;
+    }
+  }
+
+  const sess = DB.getSession();
+  if (sess) { const op = document.getElementById('f-op'); if(op) op.value = sess.usuario; }
+
+  App.showToast('✓ Etiqueta de prueba cargada — ' + parsed.nombre);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
