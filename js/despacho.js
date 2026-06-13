@@ -411,7 +411,7 @@ function confirmarSalida(pedidoId) {
       tipo:'despacho', id_caja:caja.id, sku:caja.sku, producto:caja.nombre,
       tipo_carne:caja.tipo, lote:caja.lote, fecha_vencimiento:caja.fecVcto,
       peso_neto:caja.pesoNeto, proveedor:caja.proveedor, camara_frio:caja.camara,
-      n_pallet:caja.pallet, cliente_destino:p.cliente, orden_compra:p.oc||'',
+      n_pallet:caja.pallet, cliente:p.cliente, orden_compra:p.oc||'',
       numero_pedido:pedidoId, fecha_ingreso:caja.fecIngreso,
       fecha_despacho:hoy, hora_despacho:hora,
       operario_despacho:s?.usuario||'Sistema', observaciones:caja.obs||''
