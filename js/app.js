@@ -391,6 +391,7 @@ function guardarCaja(e) {
     // Mostrar botón añadir stock
     const btnAdd = document.getElementById('btn-add-stock');
     if (btnAdd) btnAdd.style.display = '';
+    window._etiquetaFijada = null; // nueva caja, desanclar
     irA('etiquetas');
     setTimeout(() => { if(typeof generarEtiqueta === 'function') generarEtiqueta(); }, 200);
   }, 300);
@@ -697,6 +698,12 @@ function generarCodigoBarras(caja) {
 }
 
 function generarEtiqueta() {
+  // Si ya hay una etiqueta generada para esta caja, reusar esos datos (ancla)
+  if (window._etiquetaFijada) {
+    _renderizarEtiqueta(window._etiquetaFijada);
+    return;
+  }
+
   const get = id => document.getElementById(id)?.value || '';
   const caja = window._cajaPendienteSheets || {};
 
@@ -715,7 +722,6 @@ function generarEtiqueta() {
     planta:    get('eq-planta')    || caja.planta     || '',
     pais:      get('eq-pais')      || caja.pais       || 'Chile',
     cert:      get('eq-cert')      || caja.cert       || '',
-    barras:    get('eq-barras')    || caja.codigoBarras || '',
   };
 
   if (!datos.sku && !datos.nombre && !datos.lote) {
@@ -729,11 +735,17 @@ function generarEtiqueta() {
     if (idEl) idEl.value = datos.id;
   }
 
-  if (!datos.barras) {
-    datos.barras = generarCodigoBarras({ id: datos.id });
-    const barrasEl = document.getElementById('eq-barras');
-    if (barrasEl) barrasEl.value = datos.barras;
-  }
+  // Siempre generar barras desde el ID (nunca desde campo cacheado)
+  datos.barras = generarCodigoBarras({ id: datos.id });
+  const barrasEl = document.getElementById('eq-barras');
+  if (barrasEl) barrasEl.value = datos.barras;
+
+  // Anclar etiqueta a estos datos
+  window._etiquetaFijada = datos;
+  _renderizarEtiqueta(datos);
+}
+
+function _renderizarEtiqueta(datos) {
 
   const fmtDate = d => { if(!d)return'—'; try { const[y,m,day]=d.split('-'); return day+'/'+m+'/'+y; } catch { return d; } };
   const hoy = new Date().toLocaleDateString('es-CL');
@@ -880,6 +892,7 @@ function filtrarModalCajas() {
 }
 
 function seleccionarCajaEtiqueta(id) {
+  window._etiquetaFijada = null; // nueva caja, desanclar
   const c = DB.getStock().find(x => x.id === id);
   if (!c) return;
   const set = (elId, v) => { const el = document.getElementById(elId); if(el) el.value = v || ''; };
