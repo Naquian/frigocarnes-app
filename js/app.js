@@ -432,9 +432,9 @@ function agregarAStockYSheets() {
     peso_bruto: caja.pesoBruto,
     proveedor: caja.proveedor,
     pais_origen: caja.pais,
-    operario: caja.operarioIngreso,
+    operario_ingreso: caja.operarioIngreso,
     fecha_ingreso: caja.fecIngreso,
-    hora: caja.horaIngreso,
+    hora_ingreso: caja.horaIngreso,
     codigo_barras: caja.codigoBarras
   });
 
