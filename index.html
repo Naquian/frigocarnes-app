@@ -254,65 +254,15 @@
         <div class="form-section">
           <div class="fsec-title">&#127981; Origen</div>
           <div class="form-row"><label>Proveedor *</label><input type="text" id="f-prov" placeholder="Frigorífico Sur SpA" required></div>
-          <div class="form-row"><label>Planta faenadora</label><input type="text" id="f-planta" placeholder="Planta Maipú"></div>
         </div>
 
-        <div class="form-section">
-          <div class="fsec-title">&#128205; Ubicación en bodega</div>
-          <div class="fg2">
-            <div class="form-row">
-              <label>Cámara de frío</label>
-              <select id="f-camara">
-                <option value="CF-01">CF-01 — Congelados</option>
-                <option value="CF-02">CF-02 — Refrigerados</option>
-                <option value="CF-03">CF-03 — Chilled</option>
-                <option value="CF-04">CF-04 — Cuarentena</option>
-              </select>
-            </div>
-            <div class="form-row"><label>N° Pallet</label><input type="text" id="f-pallet" placeholder="PAL-001"></div>
-          </div>
-          <div class="fg3">
-            <div class="form-row"><label>Rack</label><input type="text" id="f-rack" placeholder="R-A"></div>
-            <div class="form-row"><label>Fila</label><input type="text" id="f-fila" placeholder="F-01"></div>
-            <div class="form-row"><label>Nivel</label><input type="text" id="f-nivel" placeholder="N-1"></div>
-          </div>
-        </div>
 
-        <div class="form-section">
-          <div class="fsec-title">&#127981; Sanitario</div>
-          <div class="fg2">
-            <div class="form-row">
-              <label>Estado inspección</label>
-              <select id="f-insp">
-                <option value="Aprobado">Aprobado</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Rechazado">Rechazado</option>
-                <option value="En cuarentena">En cuarentena</option>
-              </select>
-            </div>
-            <div class="form-row"><label>Certificaciones</label><input type="text" id="f-cert" placeholder="SEREMI N°..."></div>
-          </div>
-        </div>
 
         <div class="form-section">
           <div class="fsec-title">&#128100; Responsable</div>
-          <div class="fg2">
-            <div class="form-row">
-              <label>Operario ingreso *</label>
-              <input type="text" id="f-op" readonly style="background:var(--bg3);cursor:not-allowed;opacity:0.8" placeholder="—">
-            </div>
-            <div class="form-row">
-              <label>Cliente destino</label>
-              <input type="text" id="f-cliente" placeholder="Supermercado XYZ">
-            </div>
-          </div>
           <div class="form-row">
-            <label>Orden de compra</label>
-            <input type="text" id="f-oc" placeholder="OC-00001">
-          </div>
-          <div class="form-row">
-            <label>Observaciones</label>
-            <textarea id="f-obs" placeholder="Golpe en esquina, etiqueta dañada..."></textarea>
+            <label>Operario ingreso</label>
+            <input type="text" id="f-op" readonly style="background:var(--bg3);cursor:not-allowed;opacity:0.8;font-weight:600" placeholder="—">
           </div>
         </div>
 
