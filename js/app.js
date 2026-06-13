@@ -226,7 +226,7 @@ function verDetalle(id) {
       </div>
       <div style="display:flex;gap:8px;margin-top:16px">
         <button class="btn btn-secondary" onclick="cerrarOverlay()" style="flex:1">✕ Cerrar</button>
-        ${(()=>{const s=DB.getSession();return(s&&s.rol==='supervisor')?'<button class="btn" style="background:#fee2e2;color:#991b1b;padding:11px 14px" onclick="if(confirm(\'¿Eliminar esta caja? Esta acción se registrará en Sheets.\'))eliminarCaja(\'${c.id}\')">🗑 Eliminar</button>':'';})()
+        ${(()=>{const s=DB.getSession();return(s&&s.rol==='supervisor')?'<button class="btn" style="background:#fee2e2;color:#991b1b;padding:11px 14px" onclick="if(confirm(\'¿Eliminar esta caja? Esta acción se registrará en Sheets.\'))eliminarCaja(\'${c.id}\')">🗑 Eliminar</button>':'';})()}
       </div>
     </div>`;
 
