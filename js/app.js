@@ -94,7 +94,7 @@ async function login() {
     aplicarPermisosRol(rol);
     irA('dashboard');
     setTimeout(() => {
-      DBSync.inicializar().then(() => { renderDashboard(); renderStock(); actualizarBadgeAlertas(); });
+      DBSync.inicializar().then(() => { renderDashboard(); renderStock(); actualizarBadgeAlertas(); if(typeof actualizarBadgePedidos==='function') actualizarBadgePedidos(); });
     }, 100);
   }
 
@@ -226,7 +226,7 @@ function verDetalle(id) {
       </div>
       <div style="display:flex;gap:8px;margin-top:16px">
         <button class="btn btn-secondary" onclick="cerrarOverlay()" style="flex:1">✕ Cerrar</button>
-        <button class="btn" style="background:#fee2e2;color:#991b1b;padding:11px 14px" onclick="if(confirm('¿Eliminar esta caja? Esta acción se registrará en Sheets.'))eliminarCaja('${c.id}')">🗑 Eliminar</button>
+        ${(()=>{const s=DB.getSession();return(s&&s.rol==='supervisor')?'<button class="btn" style="background:#fee2e2;color:#991b1b;padding:11px 14px" onclick="if(confirm(\'¿Eliminar esta caja? Esta acción se registrará en Sheets.\'))eliminarCaja(\'${c.id}\')">🗑 Eliminar</button>':'';})()
       </div>
     </div>`;
 
@@ -495,6 +495,7 @@ function despacharUna(id) { despacharCaja(id); }
 
 function renderDashboard() {
   actualizarBadgeAlertas();
+  if (typeof actualizarBadgePedidos === 'function') actualizarBadgePedidos();
   const stats = DB.getStats();
   document.getElementById('d-total').textContent = stats.total;
   document.getElementById('d-kg').textContent = stats.kgTotal;
@@ -1113,7 +1114,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('loginPin')?.addEventListener('keydown', e => { if(e.key==='Enter') login(); });
   setTimeout(actualizarBadgeAlertas, 500);
+  setTimeout(() => { if(typeof actualizarBadgePedidos==='function') actualizarBadgePedidos(); }, 600);
   setInterval(actualizarBadgeAlertas, 5 * 60 * 1000);
+  setInterval(() => { if(typeof actualizarBadgePedidos==='function') actualizarBadgePedidos(); }, 60 * 1000);
 });
 
 // Estado de conexión
