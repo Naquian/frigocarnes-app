@@ -1454,30 +1454,11 @@ const ScannerRemoto = (() => {
     el.textContent = texto;
   }
 
-  async function procesarFoto(imagenBase64, mediaType) {
+  async function procesarFoto(imagenBase64, mediaType, resultado) {
     actualizarEstadoPanel('procesando', '⟳ IA leyendo la etiqueta...');
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imagenBase64 } },
-              { type: 'text', text: 'Eres un sistema OCR para etiquetas de carne. Extrae todos los datos visibles. Responde SOLO con JSON válido sin markdown:\n{"sku":"","nombre":"","tipo":"Vacuno/Cerdo/Pollo/Cordero","lote":"","pesoNeto":0,"pesoBruto":0,"piezas":1,"fechaProduccion":"YYYY-MM-DD","fechaVencimiento":"YYYY-MM-DD","proveedor":"","planta":"","pais":"","temperatura":"","codigoBarras":"","certificaciones":"","observaciones":""}' }
-            ]
-          }]
-        })
-      });
-      if (!res.ok) throw new Error('Error API ' + res.status);
-      const data = await res.json();
-      const txt = (data.content || []).map(b => b.text || '').join('').trim();
-      let parsed;
-      try { parsed = JSON.parse(txt.replace(/```json|```/g, '').trim()); }
-      catch { parsed = {}; }
+      // Usar resultado procesado por Google Vision en el backend
+      const parsed = resultado || {};
 
       const set = (id, val) => {
         if (!val && val !== 0) return;
@@ -1540,7 +1521,7 @@ const ScannerRemoto = (() => {
       const data = await res.json();
       if (data.hay_foto) {
         actualizarEstadoPanel('recibiendo', '📥 Foto recibida, procesando...');
-        await procesarFoto(data.imagenBase64, data.mediaType);
+        await procesarFoto(data.imagenBase64, data.mediaType, data.resultado);
       }
     } catch(e) {}
   }
