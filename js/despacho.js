@@ -6,6 +6,7 @@
 // ── Estado ────────────────────────────────────────────────
 const DespachoState = {
   seleccion: new Set(),
+  filtroNP: '',  // '' = todos disponibles, 'Vacuno' etc = tipo, '__reservados__' = reservados
   filtroActivo: 'pendiente',
 
   toggle(id) {
@@ -79,10 +80,22 @@ function renderSelectorCajas() {
   const lista = document.getElementById('np-cajas-lista');
   if (!lista) return;
 
-  const todas = DB.getStock().filter(c =>
-    c.estado !== 'Despachado' &&
-    (!s || [c.id,c.sku,c.nombre,c.tipo,c.proveedor].join(' ').toLowerCase().includes(s))
-  );
+  const filtroNP = DespachoState.filtroNP || '';
+  const esReservados = filtroNP === '__reservados__';
+
+  const todas = DB.getStock().filter(c => {
+    if (c.estado === 'Despachado') return false;
+    if (esReservados) return c.estado === 'Reservado';
+    // En vista normal: excluir reservados
+    if (c.estado === 'Reservado') return false;
+    // Filtro por búsqueda
+    if (s && ![c.id,c.sku,c.nombre,c.tipo,c.proveedor].join(' ').toLowerCase().includes(s)) return false;
+    // Filtro por tipo (cuando filtroNP es un tipo de carne)
+    if (filtroNP && !['','__reservados__'].includes(filtroNP)) {
+      if (!c.tipo.toLowerCase().includes(filtroNP.toLowerCase())) return false;
+    }
+    return true;
+  });
 
   const cajas = [...todas].sort((a,b) =>
     modo === 'fifo'
@@ -149,6 +162,7 @@ function renderSelectorCajas() {
 
   lista.innerHTML = html;
   DespachoState.actualizarResumen();
+  actualizarChipReservados();
 }
 
 function seleccionarTodasNP() {
@@ -162,6 +176,27 @@ function seleccionarTodasNP() {
 
 function limpiarSeleccionNP() {
   DespachoState.limpiar();
+}
+
+function setFiltroPedido(valor, btn) {
+  DespachoState.filtroNP = valor;
+  document.getElementById('np-search').value = '';
+  // Actualizar chips activos
+  document.querySelectorAll('#panel-nuevo-pedido .chip').forEach(c => c.classList.remove('chip-active'));
+  if (btn) btn.classList.add('chip-active');
+  renderSelectorCajas();
+}
+
+function actualizarChipReservados() {
+  const s = DB.getSession();
+  const esSup = s && (s.rol === 'supervisor' || s.rol === 'admin');
+  const chip = document.getElementById('chip-np-reservados');
+  if (!chip) return;
+  if (!esSup) { chip.style.display = 'none'; return; }
+  const reservados = DB.getStock().filter(c => c.estado === 'Reservado').length;
+  chip.style.display = reservados > 0 ? 'inline-flex' : 'none';
+  chip.style.alignItems = 'center';
+  chip.style.gap = '4px';
 }
 
 // ── Crear pedido ──────────────────────────────────────────
@@ -222,6 +257,11 @@ function crearPedido() {
   actualizarBadgePedidos();
   App.showToast('✓ '+numPedStr+' creado — '+ids.length+' cajas reservadas');
   DespachoState.limpiar();
+  DespachoState.filtroNP = ''; // volver a vista Todos (sin reservados)
+  // Resetear chip activo a "Todos"
+  document.querySelectorAll('#panel-nuevo-pedido .chip').forEach(c => c.classList.remove('chip-active'));
+  const chipTodos = document.getElementById('chip-np-todos');
+  if (chipTodos) chipTodos.classList.add('chip-active');
   document.getElementById('np-cliente').value = '';
   document.getElementById('np-oc').value = '';
   renderDashboard();
