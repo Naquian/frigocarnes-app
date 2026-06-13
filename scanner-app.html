@@ -113,6 +113,17 @@
     transition: background 0.15s;
   }
   .btn-capture:active .btn-capture-inner { background: #A67B2E; }
+  .btn-galeria {
+    display: block;
+    margin: 16px auto 0;
+    background: transparent;
+    border: 1px solid #C4953A;
+    color: #C4953A;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+  }
 
   .btn-retomar {
     padding: 12px 28px;
@@ -232,6 +243,9 @@
     <button class="btn-capture" id="btnCapture" onclick="abrirCamara()" title="Tomar foto">
       <div class="btn-capture-inner"></div>
     </button>
+    <button class="btn-galeria" id="btnGaleria" onclick="abrirGaleria()" title="Subir desde galería">
+      🖼️ Subir desde galería
+    </button>
 
     <!-- Botones post-captura -->
     <button class="btn-enviar" id="btnEnviar" onclick="enviarFoto()">
@@ -248,6 +262,7 @@
 
 <!-- Input de cámara oculto -->
 <input type="file" id="fotoInput" accept="image/*" capture="environment" onchange="fotoSeleccionada(event)">
+<input type="file" id="galeriaInput" accept="image/*" onchange="fotoSeleccionada(event)">
 
 <script>
   const BACKEND_URL = 'https://frigocarnes-backend-production.up.railway.app';
@@ -274,6 +289,10 @@
 
   function abrirCamara() {
     document.getElementById('fotoInput').click();
+  }
+
+  function abrirGaleria() {
+    document.getElementById('galeriaInput').click();
   }
 
   function fotoSeleccionada(e) {
