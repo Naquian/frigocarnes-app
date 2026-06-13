@@ -289,22 +289,56 @@ function renderPedidosActivos() {
       <div style="font-size:11px;color:#64748b;margin-bottom:10px">${tiposStr}</div>
       <div style="display:flex;gap:8px">
         <button onclick="verRemito('${p.id}')" class="btn btn-secondary" style="flex:1;font-size:12px">📄 Remito</button>
-        ${(()=>{const s=DB.getSession();const esSup=s&&(s.rol==='supervisor'||s.rol==='admin');return isPend&&esSup?`<button onclick="confirmarSalida('${p.id}')" style="flex:2;background:#1a3a2a;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">🚚 Confirmar Salida</button>`:'';})()}
+        ${(()=>{const s=DB.getSession();const esSup=s&&(s.rol==='supervisor'||s.rol==='admin');if(!isPend||!esSup)return'';return `<button onclick="cancelarPedido('${p.id}')" style="flex:1;background:#fff;color:#dc2626;border:1.5px solid #dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer">✕ Cancelar</button><button onclick="confirmarSalida('${p.id}')" style="flex:2;background:#1a3a2a;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">🚚 Confirmar Salida</button>`;})()}
       </div>
     </div>`;
   }).join('');
 }
 
 function actualizarBadgePedidos() {
-  const pedidos  = JSON.parse(localStorage.getItem('frigocarnes_pedidos')||'[]');
+  const pedidos   = JSON.parse(localStorage.getItem('frigocarnes_pedidos')||'[]');
   const pendiente = pedidos.filter(p => p.estado==='pendiente').length;
-  const badge    = document.getElementById('badge-pedidos');
-  if (!badge) return;
-  if (pendiente > 0) { badge.style.display='inline'; badge.textContent=pendiente; }
-  else { badge.style.display='none'; }
+  // Badge sub-tab Pedidos (dentro de Generar Pedido)
+  const badge = document.getElementById('badge-pedidos');
+  if (badge) {
+    if (pendiente > 0) { badge.style.display='inline'; badge.textContent=pendiente; }
+    else badge.style.display='none';
+  }
+  // Badge topbar "Generar Pedido"
+  const badgeTop = document.getElementById('pedido-badge-top');
+  if (badgeTop) {
+    if (pendiente > 0) { badgeTop.style.display='inline-block'; badgeTop.textContent=pendiente; }
+    else badgeTop.style.display='none';
+  }
+  // Badge bottom nav "Pedido"
+  const badgeBnav = document.getElementById('pedido-badge-bnav');
+  if (badgeBnav) {
+    if (pendiente > 0) { badgeBnav.style.display='inline-block'; badgeBnav.textContent=pendiente; }
+    else badgeBnav.style.display='none';
+  }
 }
 
 // ── Confirmar salida ──────────────────────────────────────
+function cancelarPedido(pedidoId) {
+  if (!confirm('¿Cancelar el pedido '+pedidoId+'?\nLas cajas volverán a estar disponibles.')) return;
+  const pedidos = JSON.parse(localStorage.getItem('frigocarnes_pedidos')||'[]');
+  const idx     = pedidos.findIndex(p => p.id === pedidoId);
+  if (idx === -1) return;
+  const p = pedidos[idx];
+  // Liberar cajas reservadas
+  (p.cajasIds||[]).forEach(id => {
+    DB.updateCaja(id, { estado:'Disponible', cliente:null, oc:null, numeroPedido:null });
+    DB.addMovimiento(id, 'Pedido cancelado — '+pedidoId);
+  });
+  // Eliminar pedido
+  pedidos.splice(idx, 1);
+  localStorage.setItem('frigocarnes_pedidos', JSON.stringify(pedidos));
+  actualizarBadgePedidos();
+  renderPedidosActivos();
+  renderDashboard();
+  App.showToast('✓ Pedido '+pedidoId+' cancelado — cajas liberadas');
+}
+
 function confirmarSalida(pedidoId) {
   const pedidos = JSON.parse(localStorage.getItem('frigocarnes_pedidos')||'[]');
   const idx     = pedidos.findIndex(p => p.id === pedidoId);
