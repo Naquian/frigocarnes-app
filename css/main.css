@@ -331,6 +331,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   }
   #etiqueta-contenido {
     background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #etiqueta-preview {
+    background: transparent !important;
   }
   .etiqueta-print-wrap {
     background: #fff !important;
