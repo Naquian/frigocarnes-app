@@ -9,7 +9,6 @@
 <link rel="apple-touch-icon" href="icon-192.svg">
 <title>FrigoCarnes WMS</title>
 <link rel="stylesheet" href="css/main.css">
-
 <style>
 @keyframes pulse-alerta {
   0%   { opacity: 1; transform: scale(1); }
@@ -20,6 +19,7 @@
   animation: pulse-alerta 2.4s ease-in-out infinite;
   box-shadow: 0 0 0 2px rgba(220,38,38,0.2);
 }
+.supervisor-only { display: none; }
 </style>
 </head>
 <body>
@@ -28,7 +28,12 @@
 <div id="loginScreen" class="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <div class="login-icon">&#10052;</div>
+      <div class="login-icon">
+        <svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="48" rx="12" fill="#1a3a2a"/>
+          <text x="24" y="33" text-anchor="middle" font-size="22" font-family="Arial,sans-serif" font-weight="900" fill="#C4953A">FC</text>
+        </svg>
+      </div>
       <div class="login-brand">FrigoCarnes</div>
       <div class="login-sub">Sistema de gestión de stock</div>
     </div>
@@ -36,11 +41,9 @@
       <label>Operario</label>
       <select id="loginUser">
         <option value="">Seleccionar...</option>
-        <option value="Juan Pérez">Juan Pérez</option>
-        <option value="María González">María González</option>
-        <option value="Carlos Rojas">Carlos Rojas</option>
-        <option value="Ana Silva">Ana Silva</option>
-        <option value="Admin">Administrador</option>
+        <option value="Carlos (Administrador)">Carlos (Administrador)</option>
+        <option value="Marlen (Administradora)">Marlen (Administradora)</option>
+        <option value="Operador">Operador</option>
       </select>
     </div>
     <div class="form-row">
@@ -49,7 +52,6 @@
     </div>
     <button class="btn btn-primary" onclick="login()">Ingresar al sistema</button>
     <div id="loginError" class="error-msg" style="display:none">Usuario o PIN incorrecto</div>
-    <div class="login-hint">PIN de demo: 1234</div>
   </div>
 </div>
 
@@ -60,27 +62,32 @@
   <div class="topbar">
     <div class="topbar-inner">
       <div class="logo">
-        <div class="logo-icon">&#10052;</div>
+        <div class="logo-icon">
+          <svg viewBox="0 0 32 32" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="#1a3a2a"/>
+            <text x="16" y="22" text-anchor="middle" font-size="14" font-family="Arial,sans-serif" font-weight="900" fill="#C4953A">FC</text>
+          </svg>
+        </div>
         <div>
           <div class="logo-name">FrigoCarnes</div>
           <div class="logo-sub" id="topUser"></div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <div class="temp-badge">-18°C</div>
-      <button onclick="DBSync.refrescar().then(()=>{renderDashboard();renderStock();})" title="Sincronizar" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;opacity:0.8">⟳</button>
+        <button onclick="DBSync.refrescar().then(()=>{renderDashboard();renderStock();})" title="Sincronizar" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;opacity:0.8">⟳</button>
         <button class="icon-btn" onclick="logout()" title="Cerrar sesión">&#x2715;</button>
       </div>
     </div>
     <nav class="nav-tabs" id="mainNav">
       <button class="nav-tab active" data-view="dashboard" onclick="irA('dashboard')">&#9783; Inicio</button>
-      <button class="nav-tab" data-view="ingresar" onclick="irA('ingresar')">&#43; Ingresar</button>
       <button class="nav-tab" data-view="stock" onclick="irA('stock')">&#9723; Stock</button>
-      <button class="nav-tab" data-view="despacho" onclick="irA('despacho')">&#8594; Despacho</button>
-      <button class="nav-tab" data-view="reportes" onclick="irA('reportes')">&#9998; Reportes</button>
+      <button class="nav-tab" data-view="ingresar" onclick="irA('ingresar')">&#43; Ingresar Stock</button>
+      <button class="nav-tab" data-view="despacho" onclick="irA('despacho')">&#128230; Generar Pedido</button>
       <button class="nav-tab" data-view="alertas" onclick="irA('alertas')" style="position:relative">&#9888; Alertas<span id="alerta-badge-top" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:#dc2626;border-radius:50%"></span></button>
-      <button class="nav-tab" data-view="historial" onclick="irA('historial')">&#128197; Historial</button>
       <button class="nav-tab" data-view="etiquetas" onclick="irA('etiquetas')">&#127991; Etiquetas</button>
+      <button class="nav-tab supervisor-only" data-view="reportes" onclick="irA('reportes')">&#9998; Reportes</button>
+      <button class="nav-tab supervisor-only" data-view="historial" onclick="irA('historial')">Historial</button>
+      <button class="nav-tab supervisor-only" data-view="facturacion" onclick="irA('facturacion')">&#128196; Facturación</button>
     </nav>
   </div>
 
@@ -121,7 +128,6 @@
 
     <!-- INGRESAR -->
     <div class="view" id="view-ingresar">
-
       <!-- ESCÁNER REMOTO DESDE CELULAR -->
       <div style="background:#252522;border-radius:12px;padding:14px 16px;margin-bottom:14px;border:1px solid #3A3A36">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -139,32 +145,17 @@
           📷 Esperando foto del celular...
         </div>
       </div>
-      <!-- Scanner oculto (mantener para compatibilidad) -->
       <canvas id="camCanvas" style="display:none"></canvas>
       <video id="camVideo" style="display:none" autoplay playsinline muted></video>
-
-
-      <!-- Preview análisis (oculto, mantener para compatibilidad) -->
-      <div id="panelAnalisis" style="display:none">
-        
-      </div>
+      <div id="panelAnalisis" style="display:none"></div>
 
       <!-- Formulario -->
       <form id="cajaForm" onsubmit="guardarCaja(event)" style="margin-top:12px">
         <div class="form-section">
           <div class="fsec-title">&#128273; Identificación</div>
-          <div class="fg2">
-            <div class="form-row">
-              <label>ID de caja *</label>
-              <div style="display:flex;gap:6px">
-                <input type="text" id="f-id" placeholder="CJ-2025-00001" required style="flex:1">
-                <button type="button" class="btn-mini" onclick="generarID()">Auto</button>
-              </div>
-            </div>
-            <div class="form-row">
-              <label>SKU *</label>
-              <input type="text" id="f-sku" placeholder="VAC-LOM-001" required>
-            </div>
+          <div class="form-row">
+            <label>SKU *</label>
+            <input type="text" id="f-sku" placeholder="VAC-LOM-001" required>
           </div>
           <div class="form-row">
             <label>Nombre / Corte *</label>
@@ -184,23 +175,13 @@
 
         <div class="form-section">
           <div class="fsec-title">&#127830; Producto</div>
-          <div class="fg2">
-            <div class="form-row">
-              <label>Tipo de carne *</label>
-              <select id="f-tipo" required>
-                <option value="">Seleccionar</option>
-                <option>Vacuno</option><option>Cerdo</option><option>Pollo</option>
-                <option>Cordero</option><option>Pavo</option><option>Mixto</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label>Categoría</label>
-              <select id="f-cat">
-                <option value="">Seleccionar</option>
-                <option>Corte mayor</option><option>Corte menor</option>
-                <option>Menudencia</option><option>Elaborado</option><option>Congelado</option>
-              </select>
-            </div>
+          <div class="form-row">
+            <label>Tipo de carne *</label>
+            <select id="f-tipo" required>
+              <option value="">Seleccionar</option>
+              <option>Vacuno</option><option>Cerdo</option><option>Pollo</option>
+              <option>Cordero</option><option>Pavo</option><option>Mixto</option>
+            </select>
           </div>
           <div class="fg2">
             <div class="form-row">
@@ -222,22 +203,12 @@
               <select id="f-unidad"><option value="kg">kg</option><option value="unidades">Unidades</option></select>
             </div>
           </div>
-          <div class="fg2">
-            <div class="form-row">
-              <label>País origen</label>
-              <select id="f-pais">
-                <option>Chile</option><option>Argentina</option><option>Brasil</option>
-                <option>Uruguay</option><option>Paraguay</option><option>Australia</option><option>Nueva Zelanda</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label>Temp. conservación</label>
-              <select id="f-temp">
-                <option value="-18°C a -20°C">-18°C a -20°C</option>
-                <option value="0°C a 4°C">0°C a 4°C</option>
-                <option value="-1°C a 1°C">-1°C a 1°C</option>
-              </select>
-            </div>
+          <div class="form-row">
+            <label>País origen</label>
+            <select id="f-pais">
+              <option>Chile</option><option>Argentina</option><option>Brasil</option>
+              <option>Uruguay</option><option>Paraguay</option><option>Australia</option><option>Nueva Zelanda</option>
+            </select>
           </div>
         </div>
 
@@ -255,8 +226,6 @@
           <div class="fsec-title">&#127981; Origen</div>
           <div class="form-row"><label>Proveedor *</label><input type="text" id="f-prov" placeholder="Frigorífico Sur SpA" required></div>
         </div>
-
-
 
         <div class="form-section">
           <div class="fsec-title">&#128100; Responsable</div>
@@ -296,16 +265,14 @@
         <button class="chip" data-f="Disponible" onclick="setFiltro('Disponible',this)">Disponibles</button>
         <button class="chip" data-f="Reservado" onclick="setFiltro('Reservado',this)">Reservados</button>
         <button class="chip" data-f="vcto7" onclick="setFiltro('vcto7',this)">Vence ≤7d</button>
-        <button class="chip" data-f="Cuarentena" onclick="setFiltro('Cuarentena',this)">Cuarentena</button>
         <button class="chip" data-f="Despachado" onclick="setFiltro('Despachado',this)">Despachados</button>
       </div>
       <div id="stockCount" class="stock-count"></div>
       <div id="cajaList" class="caja-list"></div>
     </div>
 
-    <!-- DESPACHO -->
+    <!-- DESPACHO (ahora: Generar Pedido) -->
     <div class="view" id="view-despacho">
-      <!-- Tabs -->
       <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
         <button id="tab-nuevo-pedido" onclick="switchTabDespacho('nuevo')"
           style="flex:1;padding:10px;background:none;border:none;font-weight:700;font-size:13px;color:var(--primary);border-bottom:3px solid var(--primary);cursor:pointer">
@@ -317,13 +284,8 @@
         </button>
       </div>
 
-
-
-
-
       <!-- Panel: Nuevo Pedido -->
       <div id="panel-nuevo-pedido">
-        <!-- Datos del pedido -->
         <div class="card" style="padding:14px;margin-bottom:12px">
           <div style="font-weight:700;font-size:13px;color:var(--primary);margin-bottom:10px">📄 Datos del Pedido</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -336,22 +298,12 @@
               <input class="form-input" id="np-oc" placeholder="OC-0001">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div>
-              <label class="form-label">Fecha de entrega</label>
-              <input class="form-input" id="np-fecha" type="date">
-            </div>
-            <div>
-              <label class="form-label">Orden FEFO/FIFO</label>
-              <select class="form-input" id="np-modo" onchange="renderSelectorCajas()">
-                <option value="fefo">FEFO — por vencimiento</option>
-                <option value="fifo">FIFO — por ingreso</option>
-              </select>
-            </div>
+          <div>
+            <label class="form-label">Fecha de entrega</label>
+            <input class="form-input" id="np-fecha" type="date">
           </div>
         </div>
 
-        <!-- Buscador cajas -->
         <div style="margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:2px solid var(--primary);border-radius:12px;padding:11px 16px">
             <span style="font-size:18px">🔍</span>
@@ -372,7 +324,6 @@
           </div>
         </div>
 
-        <!-- Resumen selección -->
         <div id="np-resumen" style="display:none;background:var(--bg2);border-radius:10px;padding:10px 14px;margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div id="np-resumen-texto" style="font-size:13px;font-weight:700;color:var(--primary)"></div>
@@ -381,10 +332,8 @@
           <div id="np-resumen-detalle" style="font-size:11px;color:#64748b;margin-top:2px"></div>
         </div>
 
-        <!-- Lista de cajas para seleccionar -->
         <div id="np-cajas-lista" class="caja-list"></div>
 
-        <!-- Botón crear pedido -->
         <div style="position:sticky;bottom:60px;padding:10px 0">
           <button onclick="crearPedido()" id="btn-crear-pedido"
             style="width:100%;background:#1a3a2a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;opacity:0.4">
@@ -395,7 +344,6 @@
 
       <!-- Panel: Pedidos Activos -->
       <div id="panel-pedidos-activos" style="display:none">
-
         <div id="pedidos-lista"></div>
       </div>
 
@@ -411,7 +359,7 @@
       </div>
     </div>
 
-    <!-- REPORTES -->
+    <!-- REPORTES (solo supervisores) -->
     <div class="view" id="view-reportes">
       <div class="section-title">Exportar datos</div>
       <div class="report-grid">
@@ -456,15 +404,12 @@
       <div id="alertaList"></div>
     </div>
 
-
-    <!-- HISTORIAL STOCK -->
+    <!-- HISTORIAL (solo supervisores) -->
     <div class="view" id="view-historial">
       <div class="section-title">Historial de Stock</div>
-
-      <!-- Cierre de mes -->
       <div class="card" style="margin-bottom:16px;padding:16px">
         <div style="font-weight:700;font-size:15px;color:var(--primary);margin-bottom:12px">📅 Cierre de Mes</div>
-        <div style="font-size:13px;color:#64748b;margin-bottom:12px">Guarda el historial del mes en Google Sheets y genera un resumen permanente.</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:12px">Guarda el historial del mes en Google Sheets. Al cerrar el mes, las cajas despachadas se eliminan del sistema.</div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <select id="cierre-mes" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
             <option value="01">Enero</option><option value="02">Febrero</option>
@@ -486,11 +431,8 @@
         </button>
         <div id="cierre-estado" style="margin-top:10px;font-size:13px;display:none"></div>
       </div>
-
-      <!-- Consultar historial -->
       <div class="card" style="padding:16px">
         <div style="font-weight:700;font-size:15px;color:var(--primary);margin-bottom:12px">🔍 Consultar Historial</div>
-        <div style="font-size:13px;color:#64748b;margin-bottom:12px">Selecciona el mes y año para ver los movimientos de ese período.</div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <select id="hist-mes" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
             <option value="01">Enero</option><option value="02">Febrero</option>
@@ -501,10 +443,8 @@
             <option value="11">Noviembre</option><option value="12">Diciembre</option>
           </select>
           <select id="hist-anio" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px">
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026" selected>2026</option>
-            <option value="2027">2027</option>
+            <option value="2024">2024</option><option value="2025">2025</option>
+            <option value="2026" selected>2026</option><option value="2027">2027</option>
           </select>
           <button class="btn btn-primary" onclick="buscarHistorial()" style="padding:10px 18px">Buscar</button>
         </div>
@@ -517,15 +457,13 @@
       </div>
     </div>
 
-
-    <!-- ETIQUETAS QR -->
+    <!-- ETIQUETAS -->
     <div class="view" id="view-etiquetas">
-      <div class="section-title">Generador de Etiquetas QR</div>
+      <div class="section-title">Generador de Etiquetas</div>
 
       <div class="card" style="padding:16px;margin-bottom:16px">
         <div style="font-size:13px;color:#64748b;margin-bottom:14px">
-          Completa los datos y genera una etiqueta lista para imprimir con código QR.
-          Al escanear el QR, el formulario de ingreso se llena automáticamente.
+          Completa los datos y genera una etiqueta lista para imprimir con código de barras.
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -574,22 +512,19 @@
           <input class="form-input" id="eq-prov" placeholder="Frigorífico Sur SpA">
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div>
-            <label class="form-label">País Origen</label>
-            <select class="form-input" id="eq-pais">
-              <option>Chile</option><option>Argentina</option><option>Brasil</option>
-              <option>Uruguay</option><option>Paraguay</option><option>Nueva Zelanda</option>
-              <option>Australia</option><option>USA</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">Temp. Conservación</label>
-            <select class="form-input" id="eq-temp">
-              <option>-18°C a -20°C</option><option>0°C a 4°C</option>
-              <option>-1°C a 1°C</option><option>2°C a 6°C</option>
-            </select>
-          </div>
+        <div style="margin-bottom:14px">
+          <label class="form-label">País Origen</label>
+          <select class="form-input" id="eq-pais">
+            <option>Chile</option><option>Argentina</option><option>Brasil</option>
+            <option>Uruguay</option><option>Paraguay</option><option>Nueva Zelanda</option>
+            <option>Australia</option><option>USA</option>
+          </select>
+        </div>
+
+        <!-- ID de caja bloqueado (generado automáticamente) -->
+        <div style="margin-bottom:14px">
+          <label class="form-label">ID de Caja (generado automáticamente)</label>
+          <input class="form-input" id="eq-id" readonly style="background:var(--bg3);cursor:not-allowed;opacity:0.8;font-weight:600" placeholder="—">
         </div>
 
         <div style="display:flex;gap:8px">
@@ -606,9 +541,13 @@
       <div id="etiqueta-preview" style="display:none">
         <div style="font-weight:700;font-size:14px;color:var(--primary);margin-bottom:10px">Vista previa:</div>
         <div id="etiqueta-contenido" style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="imprimirEtiqueta()" style="flex:1">🖨 Imprimir</button>
           <button class="btn btn-secondary" onclick="descargarEtiqueta()" style="flex:1">⬇ Descargar PNG</button>
+          <button class="btn" id="btn-add-stock" onclick="agregarAStockYSheets()"
+            style="flex:1 0 100%;background:#1a3a2a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;display:none">
+            ✅ Añadir a Stock y Sheets
+          </button>
         </div>
       </div>
 
@@ -623,17 +562,40 @@
       </div>
     </div>
 
+    <!-- FACTURACIÓN SII (solo supervisores) -->
+    <div class="view" id="view-facturacion">
+      <div class="section-title">Facturación SII</div>
+      <div class="card" style="padding:16px;margin-bottom:16px">
+        <div style="font-weight:700;font-size:15px;color:var(--primary);margin-bottom:10px">📄 Facturas Pendientes de Aprobación</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:12px">Como supervisor puedes aprobar o rechazar las facturas antes de que sean enviadas al SII.</div>
+        <div id="facturas-lista">
+          <div class="empty-state">
+            <span class="empty-icon">📋</span>
+            <div class="empty-text">No hay facturas pendientes</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="padding:16px">
+        <div style="font-weight:700;font-size:15px;color:var(--primary);margin-bottom:10px">📊 Historial de Facturas</div>
+        <div id="facturas-historial">
+          <div class="empty-state">
+            <span class="empty-icon">📈</span>
+            <div class="empty-text">Sin facturas registradas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- BOTTOM NAV móvil -->
   <nav class="bottom-nav">
     <button class="bnav-btn active" data-v="dashboard" onclick="irA('dashboard',this)">&#9783;<span>Inicio</span></button>
-    <button class="bnav-btn" data-v="ingresar" onclick="irA('ingresar',this)">&#43;<span>Ingresar</span></button>
     <button class="bnav-btn" data-v="stock" onclick="irA('stock',this)">&#9723;<span>Stock</span></button>
-    <button class="bnav-btn" data-v="despacho" onclick="irA('despacho',this)">&#8594;<span>Despacho</span></button>
-    <button class="bnav-btn" data-v="reportes" onclick="irA('reportes',this)">&#9998;<span>Reportes</span></button>
+    <button class="bnav-btn" data-v="ingresar" onclick="irA('ingresar',this)">&#43;<span>Ingresar</span></button>
+    <button class="bnav-btn" data-v="despacho" onclick="irA('despacho',this)">&#128230;<span>Pedido</span></button>
     <button class="bnav-btn" data-v="alertas" onclick="irA('alertas',this)" style="position:relative">&#9888;<span>Alertas</span><span id="alerta-badge-bnav" style="display:none;position:absolute;top:4px;right:10px;width:8px;height:8px;background:#dc2626;border-radius:50%"></span></button>
-    <button class="bnav-btn" data-v="historial" onclick="irA('historial',this)">&#128197;<span>Historial</span></button>
+    <button class="bnav-btn" data-v="etiquetas" onclick="irA('etiquetas',this)">&#127991;<span>Etiquetas</span></button>
   </nav>
 
 </div>
