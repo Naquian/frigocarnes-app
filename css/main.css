@@ -27,7 +27,6 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .stat-ok .stat-val { color: var(--text); }
   :root {
     --bg:     #1C1C1A;
     --bg2:    #252522;
@@ -35,12 +34,44 @@
     --text:   #F5F0E8;
     --muted:  #8C8880;
     --border: #3A3A36;
+    --carbon: #F5F0E8;
   }
+  /* Texto sobre fondos oscuros */
+  .stat-ok .stat-val { color: var(--text); }
+  .login-brand { color: var(--gold) !important; }
+  /* Botón primario: texto oscuro sobre fondo dorado — correcto en ambos modos */
+  .btn-primary { color: #1C1C1A !important; }
+  .btn-primary:hover { color: #1C1C1A !important; }
+  /* Inputs y selects */
+  .form-row input, .form-row select, .form-row textarea {
+    color-scheme: dark;
+  }
+  /* Panel escáner */
+  .panel-scanner { background: var(--bg2); }
+  /* Topbar ya es oscuro — OK */
+  /* Cards */
+  .caja-card { color: var(--text); }
+  .stat-card { color: var(--text); }
+  /* Selectores del sistema */
+  select option { background: var(--bg2); color: var(--text); }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html { font-size: 16px; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg2); color: var(--text); min-height: 100vh; }
+
+/* ---- LOGIN inputs ---- */
+.login-box label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.login-box select, .login-box input {
+  width: 100%; font-size: 14px; padding: 10px 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-family: inherit; margin-bottom: 14px;
+  transition: border-color .15s;
+}
+.login-box select:focus, .login-box input:focus {
+  outline: none; border-color: var(--gold);
+}
 
 /* ---- LOGIN ---- */
 .login-screen {
