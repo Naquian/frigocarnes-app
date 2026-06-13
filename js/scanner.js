@@ -1,62 +1,54 @@
 // ============================================================
-//  FRIGOCARNES — Escáner Remoto
-//  Canal único compartido — sin problemas de usuario
+//  FRIGOCARNES — Escáner IA (local, sin backend)
+//  Usa la cámara del dispositivo directamente
 // ============================================================
 
-const express = require('express');
-const router  = express.Router();
+const Scanner = (() => {
+  let stream = null;
+  let videoEl = null;
+  let canvasEl = null;
 
-// Una sola foto pendiente para toda la empresa
-let fotoPendiente = null;
-
-// POST /api/scanner/foto — celular sube foto
-router.post('/foto', (req, res) => {
-  try {
-    const { imagenBase64, mediaType, usuario } = req.body;
-    if (!imagenBase64) return res.status(400).json({ error: 'Imagen requerida' });
-
-    fotoPendiente = {
-      imagenBase64,
-      mediaType: mediaType || 'image/jpeg',
-      usuario:   usuario || 'desconocido',
-      timestamp: Date.now(),
-      procesada: false
-    };
-
-    console.log(`[Scanner] Foto recibida de: ${usuario}`);
-    res.json({ ok: true, timestamp: fotoPendiente.timestamp });
-
-  } catch(err) {
-    console.error('[Scanner] Error:', err.message);
-    res.status(500).json({ error: 'Error guardando foto' });
-  }
-});
-
-// GET /api/scanner/pendiente/:usuario — notebook consulta (usuario ignorado)
-router.get('/pendiente/:usuario', (req, res) => {
-  if (!fotoPendiente || fotoPendiente.procesada) {
-    return res.json({ ok: true, hay_foto: false });
+  function init(videoId, canvasId) {
+    videoEl  = document.getElementById(videoId);
+    canvasEl = document.getElementById(canvasId);
   }
 
-  res.json({
-    ok:            true,
-    hay_foto:      true,
-    imagenBase64:  fotoPendiente.imagenBase64,
-    mediaType:     fotoPendiente.mediaType,
-    usuario:       fotoPendiente.usuario,
-    timestamp:     fotoPendiente.timestamp
-  });
-});
+  async function iniciar() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      if (videoEl) {
+        videoEl.srcObject = stream;
+        await videoEl.play();
+      }
+      return true;
+    } catch(e) {
+      console.warn('[Scanner] No se pudo acceder a cámara:', e.message);
+      return false;
+    }
+  }
 
-// DELETE /api/scanner/pendiente/:usuario — marcar como procesada
-router.delete('/pendiente/:usuario', (req, res) => {
-  if (fotoPendiente) fotoPendiente.procesada = true;
-  res.json({ ok: true });
-});
+  function detener() {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    if (videoEl) videoEl.srcObject = null;
+  }
 
-// GET /api/scanner/estado
-router.get('/estado', (req, res) => {
-  res.json({ ok: true, activo: true, hay_foto: fotoPendiente && !fotoPendiente.procesada });
-});
+  function capturar() {
+    if (!videoEl || !canvasEl) return null;
+    canvasEl.width  = videoEl.videoWidth  || 640;
+    canvasEl.height = videoEl.videoHeight || 480;
+    const ctx = canvasEl.getContext('2d');
+    ctx.drawImage(videoEl, 0, 0);
+    return canvasEl.toDataURL('image/jpeg', 0.85);
+  }
 
-module.exports = router;
+  function activo() {
+    return stream && stream.active;
+  }
+
+  return { init, iniciar, detener, capturar, activo };
+})();
