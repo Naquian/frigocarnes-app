@@ -126,6 +126,8 @@ function aplicarPermisosRol(rol) {
   document.querySelectorAll('.supervisor-only').forEach(el => {
     el.style.display = esSupervisor ? 'inline-flex' : 'none';
   });
+  // Chip Reservados en Generar Pedido (solo supervisores, y solo si hay reservados)
+  if (typeof actualizarChipReservados === 'function') actualizarChipReservados();
 }
 
 function logout() {
@@ -151,10 +153,14 @@ function irA(v, btn) {
   }
   const renders = {
     dashboard: typeof renderDashboard === 'function' ? renderDashboard : null,
-    stock: typeof renderStock === 'function' ? renderStock : null,
+    stock: () => { if(typeof renderStock==='function') renderStock(); },
     alertas: typeof renderAlertas === 'function' ? renderAlertas : null,
     reportes: typeof renderReportes === 'function' ? renderReportes : null,
     ingresar: () => { if(typeof ScannerRemoto !== 'undefined') ScannerRemoto.iniciar(); },
+    despacho: () => {
+      if(typeof switchTabDespacho==='function') switchTabDespacho('nuevo');
+      setTimeout(()=>{ if(typeof renderSelectorCajas==='function') renderSelectorCajas(); },50);
+    },
   };
   if (renders[v]) renders[v]();
 }
@@ -394,8 +400,15 @@ function guardarCaja(e) {
     const btnAdd = document.getElementById('btn-add-stock');
     if (btnAdd) btnAdd.style.display = '';
     window._etiquetaFijada = null; // nueva caja, desanclar
+    // Limpiar etiqueta anterior antes de ir
+    const prev = document.getElementById('etiqueta-preview');
+    if (prev) prev.style.display = 'none';
+    const cont = document.getElementById('etiqueta-contenido');
+    if (cont) cont.innerHTML = '';
+    const wrapper = document.getElementById('barcode-wrapper');
+    if (wrapper) wrapper.innerHTML = '';
     irA('etiquetas');
-    setTimeout(() => { if(typeof generarEtiqueta === 'function') generarEtiqueta(); }, 200);
+    setTimeout(() => { if(typeof generarEtiqueta === 'function') generarEtiqueta(); }, 250);
   }, 300);
 
   limpiarForm();
@@ -498,6 +511,7 @@ function despacharUna(id) { despacharCaja(id); }
 function renderDashboard() {
   actualizarBadgeAlertas();
   if (typeof actualizarBadgePedidos === 'function') actualizarBadgePedidos();
+  if (typeof actualizarChipReservados === 'function') actualizarChipReservados();
   const stats = DB.getStats();
   document.getElementById('d-total').textContent = stats.total;
   document.getElementById('d-kg').textContent = stats.kgTotal;
