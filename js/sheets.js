@@ -9,7 +9,7 @@
 // ============================================================
 
 const SHEETS_CONFIG = {
-  url: "https://script.google.com/macros/s/AKfycbwQ_2-3k2bU8KtfavEslOuEA0s6FkxphfWMUt_BX72SFdNid8K5_4EqKVpQJ1U5vzsnyg/exec",  // ← reemplaza esto
+  url: "https://script.google.com/macros/library/d/1WB4kJOMPH0YMFBZe9aD2fPeCelMST03PkJGnQSorMsdKoLfMPt99euIr/8",  // ← reemplaza esto
   version: "1.0",
   nombre: "Frigocarnes"
 };
@@ -76,16 +76,15 @@ async function enviarASheets(datosCaja) {
 
   // Intentar enviar
   try {
-    await fetch(SHEETS_CONFIG.url, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...datosCaja,
-        _version: SHEETS_CONFIG.version,
-        _sistema: SHEETS_CONFIG.nombre,
-        _enviado: new Date().toISOString()
-      })
+    const payload = encodeURIComponent(JSON.stringify({
+      ...datosCaja,
+      _version: SHEETS_CONFIG.version,
+      _sistema: SHEETS_CONFIG.nombre,
+      _enviado: new Date().toISOString()
+    }));
+    await fetch(SHEETS_CONFIG.url + '?payload=' + payload, {
+      method: "GET",
+      mode: "no-cors"
     });
 
     mostrarNotificacion("✅ Enviado a Google Sheets", "success");
@@ -118,18 +117,17 @@ async function sincronizarCola() {
 
   for (const item of cola) {
     try {
-      await fetch(SHEETS_CONFIG.url, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...item.datos,
-          _version: SHEETS_CONFIG.version,
-          _sistema: SHEETS_CONFIG.nombre,
-          _enviado: new Date().toISOString(),
-          _era_offline: true,
-          _timestamp_original: item.timestamp
-        })
+      const payloadSync = encodeURIComponent(JSON.stringify({
+        ...item.datos,
+        _version: SHEETS_CONFIG.version,
+        _sistema: SHEETS_CONFIG.nombre,
+        _enviado: new Date().toISOString(),
+        _era_offline: true,
+        _timestamp_original: item.timestamp
+      }));
+      await fetch(SHEETS_CONFIG.url + '?payload=' + payloadSync, {
+        method: "GET",
+        mode: "no-cors"
       });
 
       SheetsQueue.eliminar(item.id);
