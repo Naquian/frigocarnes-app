@@ -636,17 +636,14 @@ async function ejecutarCierreMes() {
   despMes.forEach(c => { try { DB.deleteCaja(c.id); } catch(e) {} });
 
   try {
-    await fetch(SHEETS_CONFIG.url, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const cierrePayload = encodeURIComponent(JSON.stringify({
         tipo: 'cierre_mes', periodo: key, mes_nombre: mesNom, anio,
-        ingresos: ingMes.map(c => ({ id_caja:c.id, sku:c.sku, producto:c.nombre, tipo_carne:c.tipo, lote:c.lote, fecha_vencimiento:c.fecVcto, peso_neto:c.pesoNeto, proveedor:c.proveedor, estado:c.estado, operario:c.operarioIngreso, fecha_ingreso:c.fecIngreso })),
+        ingresos: ingMes.map(c => ({ id_caja:c.id, sku:c.sku, producto:c.nombre, tipo_carne:c.tipo, lote:c.lote, fecha_vencimiento:c.fecVcto, peso_neto:c.pesoNeto, proveedor:c.proveedor, estado:c.estado, operario_ingreso:c.operarioIngreso, fecha_ingreso:c.fecIngreso })),
         despachos: despMes.map(c => ({ id_caja:c.id, sku:c.sku, producto:c.nombre, tipo_carne:c.tipo, lote:c.lote, peso_neto:c.pesoNeto, proveedor:c.proveedor, cliente:c.cliente, fecha_despacho:c.fecSalida, operario:c.operarioDespacho })),
         stock_final: stockDisponible.map(c => ({ id_caja:c.id, sku:c.sku, producto:c.nombre, peso_neto:c.pesoNeto, estado:c.estado, camara:c.camara, fecha_vencimiento:c.fecVcto })),
         resumen: cierres[key].resumen
-      })
-    });
+    }));
+    await fetch(SHEETS_CONFIG.url + '?payload=' + cierrePayload, { method: 'GET', mode: 'no-cors' });
     estado.innerHTML = `<span style="color:#16a34a">✅ Cierre de ${mesNom} ${anio} enviado. ${despMes.length} cajas despachadas eliminadas.</span>`;
     App.showToast(`✓ Cierre ${mesNom} ${anio} guardado`);
     document.getElementById('hist-mes').value = mes;
@@ -1175,11 +1172,8 @@ async function ejecutarResetTotal() {
 
   // 1. Enviar reset a Sheets y esperar
   try {
-    await fetch(SHEETS_CONFIG.url, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: 'reset_total' })
-    });
+    const resetPayload = encodeURIComponent(JSON.stringify({ tipo: 'reset_total' }));
+    await fetch(SHEETS_CONFIG.url + '?payload=' + resetPayload, { method: 'GET', mode: 'no-cors' });
   } catch(e) {}
 
   // 2. Limpiar TODO el localStorage
