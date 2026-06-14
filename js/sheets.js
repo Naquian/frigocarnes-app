@@ -9,7 +9,7 @@
 // ============================================================
 
 const SHEETS_CONFIG = {
-  url: "https://script.google.com/macros/s/AKfycbxO-j_u945doC3bmmGea_NB1B0Bxvl3EU_7ebCAfyYd5QTqHfn9oPowwNU9B7S5ITBUkA/exec",  // ← reemplaza esto
+  url: "https://script.google.com/macros/s/AKfycbxO-j_u945doC3bmmGea_NB1B0Bxvl3EU_7ebCafyYd5QTqHfn9oPowwNU9B7S5ITBUkA/exec",  // ← reemplaza esto
   version: "1.0",
   nombre: "Frigocarnes"
 };
